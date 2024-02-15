@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:travel_buddy/screens/plan_a_journey/map_page.dart';
+
 import 'package:travel_buddy/screens/plan_a_journey/planning.dart';
 
 class Home extends StatelessWidget {
@@ -17,7 +19,8 @@ class Home extends StatelessWidget {
             onPressed: () {
              Navigator.push(
           context,
-        MaterialPageRoute(builder: (context) => PlanningScreen()),
+        //MaterialPageRoute(builder: (context) => PlanningScreen()),
+        MaterialPageRoute(builder: (context) => MapScreen()),
   );
             },
             style: ElevatedButton.styleFrom(
