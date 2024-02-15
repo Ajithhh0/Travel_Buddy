@@ -16,9 +16,11 @@ class SearchDestinationPage extends StatefulWidget {
 
 class _SearchDestinationPageState extends State<SearchDestinationPage> {
   TextEditingController startingTextEditingController = TextEditingController();
-  TextEditingController destinationTextEditingController = TextEditingController();
+  TextEditingController destinationTextEditingController =
+      TextEditingController();
 
   List<PredictionModel> destinationPredictionsPlacesList = [];
+  List<PredictionModel> startingPredictionsPlacesList = [];
 
   @override
   void initState() {
@@ -28,8 +30,11 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
 
   _getUserLocation() async {
     try {
-      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-      String userAddress = await CommonMethods.convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(position, context);
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      String userAddress = await CommonMethods
+          .convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
+              position, context);
       setState(() {
         startingTextEditingController.text = userAddress;
       });
@@ -40,9 +45,11 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
 
   searchLocation(String locationName) async {
     if (locationName.length > 0) {
-      String apiPlacesUrl = "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$locationName&key=$gMapKey&components=country:qa";
+      String apiPlacesUrl =
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$locationName&key=$gMapKey";
 
-      var responseFromPlacesAPI = await CommonMethods.sendRequestToAPI(apiPlacesUrl);
+      var responseFromPlacesAPI =
+          await CommonMethods.sendRequestToAPI(apiPlacesUrl);
 
       if (responseFromPlacesAPI == "error") {
         return;
@@ -51,20 +58,23 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
       if (responseFromPlacesAPI["status"] == "OK") {
         var predictionResultInJson = responseFromPlacesAPI["predictions"];
         var predictionsList = (predictionResultInJson as List)
-            .map((eachPlacePrediction) => PredictionModel.fromJson(eachPlacePrediction))
+            .map((eachPlacePrediction) =>
+                PredictionModel.fromJson(eachPlacePrediction))
             .toList();
 
         setState(() {
+          startingPredictionsPlacesList = predictionsList;
           destinationPredictionsPlacesList = predictionsList;
         });
       }
     }
     if (locationName.isEmpty) {
-    setState(() {
-      destinationPredictionsPlacesList.clear();
-    });
-    return;
-  }
+      setState(() {
+        destinationPredictionsPlacesList.clear();
+        startingPredictionsPlacesList.clear();
+      });
+      return;
+    }
   }
 
   @override
@@ -75,7 +85,7 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
             ?.humanReadableAddress ??
         "Not Available";
 
-    startingTextEditingController.text = userAddress;
+   // startingTextEditingController.text = userAddress;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -141,6 +151,9 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
                                 padding: const EdgeInsets.all(3),
                                 child: TextField(
                                   controller: startingTextEditingController,
+                                  onChanged: (value) {
+                                    searchLocation(value);
+                                  },
                                   decoration: const InputDecoration(
                                       hintText: "Starting From ?",
                                       fillColor: Colors.white12,
@@ -195,29 +208,51 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
             //prediction_result_destination
             (destinationPredictionsPlacesList.length > 0)
                 ? Padding(
-              padding:
-              const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-              child: ListView.separated(
-                itemBuilder: (context, index) {
-                  return Card(
-                    elevation: 3,
-                    child: PredictionPlaceUI(
-                      predictedPlaceData:
-                      destinationPredictionsPlacesList[index],
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: ListView.separated(
+                      itemBuilder: (context, index) {
+                        return Card(
+                          elevation: 3,
+                          child: PredictionPlaceUI(
+                            predictedPlaceData:
+                                destinationPredictionsPlacesList[index],
+                          ),
+                        );
+                      },
+                      separatorBuilder: (BuildContext context, int index) =>
+                          const SizedBox(
+                        height: 2,
+                      ),
+                      itemCount: destinationPredictionsPlacesList.length,
+                      shrinkWrap: true,
+                      physics: const ClampingScrollPhysics(),
                     ),
-                  );
-                },
-                separatorBuilder:
-                    (BuildContext context, int index) =>
-                const SizedBox(
-                  height: 2,
-                ),
-                itemCount:
-                destinationPredictionsPlacesList.length,
-                shrinkWrap: true,
-                physics: const ClampingScrollPhysics(),
-              ),
-            )
+                  )
+                : Container(),
+                (startingPredictionsPlacesList.length > 0)
+                ? Padding(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                    child: ListView.separated(
+                      itemBuilder: (context, index) {
+                        return Card(
+                          elevation: 3,
+                          child: PredictionPlaceUI(
+                            predictedPlaceData:
+                                destinationPredictionsPlacesList[index],
+                          ),
+                        );
+                      },
+                      separatorBuilder: (BuildContext context, int index) =>
+                          const SizedBox(
+                        height: 2,
+                      ),
+                      itemCount: destinationPredictionsPlacesList.length,
+                      shrinkWrap: true,
+                      physics: const ClampingScrollPhysics(),
+                    ),
+                  )
                 : Container(),
           ],
         ),
