@@ -13,4 +13,12 @@ class DirectionDetails
     this.durationValueDigits,
     this.encodedPoints,
   });
+
+  DirectionDetails.fromJson(Map<String, dynamic> json) {
+    distanceTextString = json['routes'][0]['legs'][0]['distance']['text'];
+    distanceValueDigits = json['routes'][0]['legs'][0]['distance']['value'];
+    durationTextString = json['routes'][0]['legs'][0]['duration']['text'];
+    durationValueDigits = json['routes'][0]['legs'][0]['duration']['value'];
+    encodedPoints = json['routes'][0]['overview_polyline']['points'];
+  }
 }

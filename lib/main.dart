@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+//import 'package:travel_buddy/altmap/states/app_state.dart';
 import 'package:travel_buddy/app_info.dart';
 import 'package:travel_buddy/reg/login.dart';
 

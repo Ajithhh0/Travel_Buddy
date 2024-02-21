@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+//import 'package:travel_buddy/altmap/screens/mapScreen.dart';
 import 'package:travel_buddy/screens/plan_a_journey/map_page.dart';
 
-import 'package:travel_buddy/screens/plan_a_journey/planning.dart';
+
+//import 'package:travel_buddy/screens/plan_a_journey/planning.dart';
 
 class Home extends StatelessWidget {
   @override
@@ -21,6 +23,7 @@ class Home extends StatelessWidget {
           context,
         //MaterialPageRoute(builder: (context) => PlanningScreen()),
         MaterialPageRoute(builder: (context) => MapScreen()),
+        //MaterialPageRoute(builder: (context) => MyHomePage(title: '',)),
   );
             },
             style: ElevatedButton.styleFrom(

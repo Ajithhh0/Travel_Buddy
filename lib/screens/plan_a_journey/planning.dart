@@ -58,7 +58,7 @@ class _PlanningScreenState extends State<PlanningScreen> {
     final String googlePlacesApiKey = 'AIzaSyD0AiYo5-mCiOEHs2CRB5V1WpDptOtVzGc';
     final String groundURL =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-    final String request = '$groundURL?input=$input&key=$googlePlacesApiKey';
+    final String request = '$groundURL?input=$input&key=$googlePlacesApiKey'; 
 
     final response = await http.get(Uri.parse(request));
 

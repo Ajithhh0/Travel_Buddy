@@ -1,7 +1,7 @@
 class AddressModel {
   String? humanReadableAddress;
   double? latitudePosition;
-  double? longitudePosition;
+  double? longitudePosition; 
   String? placeID;
   String? placeName;
 

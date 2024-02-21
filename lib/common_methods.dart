@@ -46,7 +46,7 @@ class CommonMethods {
   }
 
   static Future<String> convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
-      Position position, BuildContext context) async {
+      Position position, BuildContext context, bool isStartLoc) async {
     String humanReadableAddress = "";
     String apiGeoCodingUrl =
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.latitude},${position.longitude}&key=$gMapKey";
@@ -58,40 +58,57 @@ class CommonMethods {
       print("humanReadableAddress = " + humanReadableAddress);
 
       AddressModel model = AddressModel();
+
       model.humanReadableAddress = humanReadableAddress;
       model.longitudePosition = position.longitude;
       model.latitudePosition = position.latitude;
 
-      Provider.of<AppInfo>(context, listen: false)
-          .updateStartLocation(model);
+      
+
+      if (isStartLoc) {
+        Provider.of<AppInfo>(context, listen: false).updateStartLocation(model);
+      } else {
+        Provider.of<AppInfo>(context, listen: false)
+            .updateDestinationLocation(model);
+      }
     }
 
     return humanReadableAddress;
   }
 
   //directions_api
-  static Future<DirectionDetails?> getDirectionDetailsFromAPI(LatLng source, LatLng destination) async
-  {
-    String urlDirectionsAPI = "https://maps.googleapis.com/maps/api/directions/json?destination=${destination.latitude},${destination.longitude}&origin=${source.latitude},${source.longitude}&mode=driving&key=$gMapKey";
+  static Future<DirectionDetails?> getDirectionDetailsFromAPI(
+      LatLng source, LatLng destination) async {
+    String urlDirectionsAPI =
+        "https://maps.googleapis.com/maps/api/directions/json?destination=${destination.latitude},${destination.longitude}&origin=${source.latitude},${source.longitude}&mode=driving&key=$gMapKey";
+
+    print(' API KEY: ${urlDirectionsAPI}');
 
     var responseFromDirectionsAPI = await sendRequestToAPI(urlDirectionsAPI);
 
-    if(responseFromDirectionsAPI == "error")
-    {
+    if (responseFromDirectionsAPI == "error") {
       return null;
     }
 
     DirectionDetails detailsModel = DirectionDetails();
 
-    detailsModel.distanceTextString = responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["text"];
-    detailsModel.distanceValueDigits = responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["value"];
+    if (responseFromDirectionsAPI["routes"].isEmpty) {
+      print('Routes Empty');
+    }
 
-    detailsModel.durationTextString = responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["text"];
-    detailsModel.durationValueDigits = responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["value"];
+    detailsModel.distanceTextString =
+        responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["text"];
+    detailsModel.distanceValueDigits =
+        responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["value"];
 
-    detailsModel.encodedPoints = responseFromDirectionsAPI["routes"][0]["overview_polyline"]["points"];
+    detailsModel.durationTextString =
+        responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["text"];
+    detailsModel.durationValueDigits =
+        responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["value"];
+
+    detailsModel.encodedPoints =
+        responseFromDirectionsAPI["routes"][0]["overview_polyline"]["points"];
 
     return detailsModel;
   }
-
 }
