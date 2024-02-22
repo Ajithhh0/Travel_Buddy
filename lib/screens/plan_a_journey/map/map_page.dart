@@ -5,12 +5,13 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:travel_buddy/app_info.dart';
-import 'package:travel_buddy/common_methods.dart';
-import 'package:travel_buddy/direction_details.dart';
-import 'package:travel_buddy/global_var.dart';
-import 'package:travel_buddy/loading.dart';
-import 'package:travel_buddy/screens/plan_a_journey/search_destination.dart';
+import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/misc/common_methods.dart';
+import 'package:travel_buddy/misc/direction_details.dart';
+import 'package:travel_buddy/misc/global_var.dart';
+import 'package:travel_buddy/misc/loading.dart';
+import 'package:travel_buddy/screens/plan_a_journey/map/search_destination.dart';
+import 'package:travel_buddy/screens/plan_a_journey/trip_plan.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -222,7 +223,26 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plan Your Journey'),
-      ),
+        actions: [
+        if (tripDirectionDetailsInfo != null)
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TripPlanning()),
+              );
+            },
+            icon:Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Add Trip'),
+                const Icon(Icons.add),
+                
+              ],
+            ),
+          ),
+      ],
+    ),
       body: Stack(
         children: [
           GoogleMap(
@@ -265,17 +285,19 @@ class _MapScreenState extends State<MapScreen> {
                     ),
                   ],
                 ),
-                child: const CircleAvatar(
-                  backgroundColor: Colors.grey,
-                  radius: 20,
-                  child: Icon(
-                    Icons.menu,
-                    color: Colors.black87,
-                  ),
-                ),
+                // child: const CircleAvatar(
+                //   backgroundColor: Colors.grey,
+                //   radius: 20,
+                //   child: Icon(
+                //     Icons.menu,
+                //     color: Colors.black87,
+                //   ),
+                // ),
               ),
             ),
           ),
+
+          
 
           ///search location icon button
           Positioned(

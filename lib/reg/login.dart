@@ -1,11 +1,15 @@
+
 import 'package:flutter/material.dart';
+import 'package:get/get.dart'; // Import GetX
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:travel_buddy/main.dart';
-
 import 'package:travel_buddy/reg/registration.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
 
 class LoginPage extends StatelessWidget {
+  const LoginPage({Key? key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,15 +42,30 @@ class _LoginFormState extends State<LoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  Future<void> _logIn() async {
+  @override
+  void initState() {
+    super.initState();
+    // Retrieve stored email during app startup if available
+    _getEmailFromSharedPreferences();
+  }
+
+  Future<void> _getEmailFromSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? storedEmail = prefs.getString('email');
+    if (storedEmail != null) {
+      _emailController.text = storedEmail;
+      _login(); // Auto-login if email is stored
+    }
+  }
+
+  Future<void> _login() async {
     try {
       await supabase.auth.signInWithPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim());
       if (!mounted) return;
 
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      Get.offAllNamed('/home'); // Navigate to home screen using GetX
     } on AuthException catch (e) {
       print(e);
     }
@@ -122,7 +141,7 @@ class _LoginFormState extends State<LoginForm> {
                           children: [
                             ElevatedButton(
                               onPressed: () async {
-                                _logIn();
+                                _login();
                               },
                               child: const Text('Login'),
                             ),

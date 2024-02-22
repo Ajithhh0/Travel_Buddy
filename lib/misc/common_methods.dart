@@ -7,10 +7,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
-import 'package:travel_buddy/address_model.dart';
-import 'package:travel_buddy/app_info.dart';
-import 'package:travel_buddy/direction_details.dart';
-import 'package:travel_buddy/global_var.dart';
+import 'package:travel_buddy/misc/address_model.dart';
+import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/misc/direction_details.dart';
+import 'package:travel_buddy/misc/global_var.dart';
 
 class CommonMethods {
   // checkConnectivity(BuildContext context) async

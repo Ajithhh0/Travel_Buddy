@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 //import 'package:travel_buddy/altmap/screens/mapScreen.dart';
-import 'package:travel_buddy/screens/plan_a_journey/map_page.dart';
+import 'package:travel_buddy/screens/plan_a_journey/map/map_page.dart';
 
 
 //import 'package:travel_buddy/screens/plan_a_journey/planning.dart';
@@ -30,12 +30,11 @@ class Home extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius:
                     BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Plan a Journey',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),
@@ -47,12 +46,11 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Plans',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),
@@ -64,12 +62,11 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Join a Trip',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),
@@ -81,12 +78,11 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Events',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),
@@ -98,13 +94,12 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Packages and Offers',
               style: TextStyle(
-                color: Colors.white,
+                color: Colors.black,
               ),
             ),
           ),
@@ -117,12 +112,11 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Accounts',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),
@@ -134,12 +128,11 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
             ),
             child: const Text(
               'Photos',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),
@@ -151,12 +144,12 @@ class Home extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.0),
-              ),
-              primary: Colors.blue,
+              ), backgroundColor: Colors.blue,
+              
             ),
             child: const Text(
               'Past Trips',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Colors.black),
             ),
           ),
         ),

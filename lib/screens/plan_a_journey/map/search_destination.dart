@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
-import 'package:travel_buddy/app_info.dart';
-import 'package:travel_buddy/common_methods.dart';
-import 'package:travel_buddy/global_var.dart';
-import 'package:travel_buddy/prediction_place_ui.dart';
-import 'package:travel_buddy/predictions.dart';
+import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/misc/common_methods.dart';
+import 'package:travel_buddy/misc/global_var.dart';
+import 'package:travel_buddy/misc/prediction_place_ui.dart';
+import 'package:travel_buddy/misc/predictions.dart';
 
 class SearchDestinationPage extends StatefulWidget {
   final VoidCallback onGoButtonPressed;

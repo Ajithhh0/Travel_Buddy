@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:travel_buddy/address_model.dart';
-import 'package:travel_buddy/app_info.dart';
-import 'package:travel_buddy/predictions.dart';
+import 'package:travel_buddy/misc/address_model.dart';
+import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/misc/predictions.dart';
 
 class PredictionPlaceUI extends StatefulWidget {
   final PredictionModel? predictedPlaceData;

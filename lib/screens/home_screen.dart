@@ -3,11 +3,11 @@ import 'package:travel_buddy/main.dart';
 import 'package:travel_buddy/reg/login.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
-import 'package:travel_buddy/screens/trips.dart';
+import 'package:travel_buddy/screens/my%20trips/trips.dart';
 import 'home.dart';
-import 'profile.dart';
-import 'upcoming.dart';
-import 'chats.dart';
+import 'profile/profile.dart';
+import 'upcoming trips/upcoming.dart';
+import 'chat/chats.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_titles[_selectedIndex]), // Set dynamic title here
         actions: [
           IconButton(
-            icon: Icon(Icons.exit_to_app),
+            icon: const Icon(Icons.exit_to_app),
             onPressed: _signOut,
           ),
         ],
