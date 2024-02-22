@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
         nextScreen: _getNextScreen(),
       ),
       getPages: [
-        GetPage(name: '/home', page: () => HomeScreen()),
+        GetPage(name: '/home', page: () => const HomeScreen()),
       ],
     );
   }
