@@ -1,9 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travel_buddy/main.dart';
-import 'package:travel_buddy/reg/login.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:travel_buddy/reg/log1.dart';
 import 'package:travel_buddy/screens/my%20trips/trips.dart';
+
 import 'home.dart';
 import 'profile/profile.dart';
 import 'upcoming trips/upcoming.dart';
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     'Chat',
     'Profile',
   ];
-  static  List<Widget> _widgetOptions = <Widget>[
+  static final List<Widget> _widgetOptions = <Widget>[
     Home(),
     TripScreen(),
     UpcomingScreen(),
@@ -35,12 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
     ProfileScreen(),
   ];
 
-  Future<void> _signOut() async {
-    await supabase.auth.signOut();
-    if (!mounted) return;
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => LoginPage()));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +46,13 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text(_titles[_selectedIndex]), // Set dynamic title here
         actions: [
           IconButton(
-            icon: const Icon(Icons.exit_to_app),
-            onPressed: _signOut,
-          ),
+              icon: const Icon(Icons.exit_to_app),
+              onPressed: () async {
+               await FirebaseAuth.instance.signOut();
+                 Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => const LoginPage()));
+  
+              }),
         ],
       ),
       bottomNavigationBar: Container(

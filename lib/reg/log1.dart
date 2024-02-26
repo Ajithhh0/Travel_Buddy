@@ -1,10 +1,7 @@
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart'; // Import GetX
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:travel_buddy/main.dart';
-import 'package:travel_buddy/reg/registration.dart';
+import 'package:travel_buddy/reg/reg1.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
 
 class LoginPage extends StatelessWidget {
@@ -46,30 +43,23 @@ class _LoginFormState extends State<LoginForm> {
   void initState() {
     super.initState();
     // Retrieve stored email during app startup if available
-    _getEmailFromSharedPreferences();
+    
   }
 
-  Future<void> _getEmailFromSharedPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? storedEmail = prefs.getString('email');
-    if (storedEmail != null) {
-      _emailController.text = storedEmail;
-      _login(); // Auto-login if email is stored
-    }
-  }
+ 
 
-  Future<void> _login() async {
-    try {
-      await supabase.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim());
-      if (!mounted) return;
+  // Future<void> _login() async {
+  //   try {
+  //     await supabase.auth.signInWithPassword(
+  //         email: _emailController.text.trim(),
+  //         password: _passwordController.text.trim());
+  //     if (!mounted) return;
 
-      Get.offAllNamed('/home'); // Navigate to home screen using GetX
-    } on AuthException catch (e) {
-      print(e);
-    }
-  }
+  //     Get.offAllNamed('/home'); // Navigate to home screen using GetX
+  //   } on AuthException catch (e) {
+  //     print(e);
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +131,30 @@ class _LoginFormState extends State<LoginForm> {
                           children: [
                             ElevatedButton(
                               onPressed: () async {
-                                _login();
+                                 if (_formKey.currentState?.validate() ?? false) {
+                                print(_emailController);
+                                try {
+                             await FirebaseAuth.instance.signInWithEmailAndPassword(
+                                          email: _emailController.text,
+                                          password: _passwordController.text);
+
+                                          if(mounted){
+                                         Navigator.of(context).pushReplacement(
+                                          
+                                          MaterialPageRoute(
+                                          builder: (context) => const HomeScreen()));
+                                          }
+                                } on FirebaseAuthException catch (e) {
+                                  if (e.code == 'wrong-password') {
+                                    print('The password is wrong.');
+                                  }
+                                  if (e.code == 'user-not-found') {
+                                    print('No such user exists.');
+                                  }
+                                } catch (e) {
+                                  print(e);
+                                }
+                              }
                               },
                               child: const Text('Login'),
                             ),

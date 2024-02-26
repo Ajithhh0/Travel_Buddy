@@ -232,11 +232,11 @@ class _MapScreenState extends State<MapScreen> {
                 MaterialPageRoute(builder: (context) => TripPlanning()),
               );
             },
-            icon:Row(
+            icon: const Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Add Trip'),
-                const Icon(Icons.add),
+                Text('Add Trip'),
+                Icon(Icons.add),
                 
               ],
             ),

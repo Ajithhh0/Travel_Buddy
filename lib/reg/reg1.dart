@@ -1,7 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:travel_buddy/main.dart';
-import 'package:travel_buddy/reg/login.dart';
+import 'package:travel_buddy/screens/home_screen.dart';
 
 class RegistrationForm extends StatefulWidget {
   const RegistrationForm({Key? key});
@@ -19,41 +19,13 @@ class _RegistrationFormState extends State<RegistrationForm> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   DateTime? _selectedDate;
-
-  Future<void> _registerUser() async {
-    try {
-      
-      await supabase.auth.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-      await insertUserData();
-
-      if (!mounted) return;
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) =>  LoginPage()));
-    } on AuthException catch (e) {
-      print(e);
-    }
-  }
-  Future<void> insertUserData() async{
-    String? dob = _selectedDate?.toIso8601String();
   
-  await supabase.from('users').insert({
-    'full_name': _nameController.text.trim(),
-    'username': _usnController.text.trim(),
-    'email': _emailController.text.trim(),
-    'mobile': _mobileController.text.trim(),
-    'password': _passwordController.text.trim(),
-    'dob': dob,
-  },);
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registration'),
+        title: const Text('Registration'),
         backgroundColor: Colors.amber,
       ),
       backgroundColor: Colors.amber,
@@ -118,7 +90,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                               ),
                             ),
                           ),
-                          SizedBox(height: 16.0),
+                          const SizedBox(height: 16.0),
                           Container(
                             width: 300,
                             child: Center(
@@ -174,11 +146,11 @@ class _RegistrationFormState extends State<RegistrationForm> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                               const Text(
+                                const Text(
                                   'Date of Birth: ',
                                   textAlign: TextAlign.right,
                                 ),
-                                SizedBox(width: 10),
+                                const SizedBox(width: 10),
                                 TextButton(
                                   onPressed: () async {
                                     final picked = await showDatePicker(
@@ -228,7 +200,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                               ),
                             ),
                           ),
-                         const SizedBox(height: 16.0),
+                          const SizedBox(height: 16.0),
                           Container(
                             width: 300,
                             child: Center(
@@ -252,7 +224,55 @@ class _RegistrationFormState extends State<RegistrationForm> {
                           ),
                           const SizedBox(height: 40.0),
                           ElevatedButton(
-                            onPressed: _registerUser,
+                            onPressed: () async {
+                              if (_formKey.currentState?.validate() ?? false) {
+                                print(_emailController);
+                                try {
+                                  UserCredential usercred = await FirebaseAuth
+                                      .instance
+                                      .createUserWithEmailAndPassword(
+                                          email: _emailController.text,
+                                          password: _passwordController.text);
+
+                                  if (usercred.user != null) {
+                                    var data = {
+                                      
+
+                                     'full_name': _nameController.text.trim(),
+                                     'username': _usnController.text.trim(),
+                                     'email': _emailController.text.trim(),
+                                     'mobile': _mobileController.text.trim(),
+                                     'password': _passwordController.text.trim(),
+                                      'dob': _selectedDate != null
+                                      ? _selectedDate!.toLocal().toString().split(' ')[0]
+                                      : '',
+                                     'created_at' : DateTime.now(),
+                                    };
+                                    await FirebaseFirestore.instance
+                                        .collection('users')
+                                        .doc(usercred.user!.uid)
+                                        .set(data);
+                                  }
+
+                                  if (mounted) {
+                                    Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                            builder: (context) =>
+                                                const HomeScreen()));
+                                  }
+                                } on FirebaseAuthException catch (e) {
+                                  if (e.code == 'weak-password') {
+                                    print('The password provided is too weak.');
+                                  } else if (e.code == 'email-already-in-use') {
+                                    print(
+                                        'The account already exists for that email');
+                                  }
+                                } catch (e) {
+                                  print(e);
+                                }
+                              }
+                            },
                             child: const Text('Save Details'),
                           ),
                         ],
