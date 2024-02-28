@@ -26,6 +26,17 @@ void main() async {
   //       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlhc3p2aGNpc3BwbmljaXlybXNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDcxMTI2NjcsImV4cCI6MjAyMjY4ODY2N30.v70IdRrf16oMBhNNtJnzkDQkAWb0RxTShGrhnslus2M',
   // );
 
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+    if (user == null) {
+      
+      print('User is signed out');
+    } else {
+     
+      print('User is signed in: ${user.uid}');
+      
+    }
+  });
+
   runApp(MyApp());
 }
 
