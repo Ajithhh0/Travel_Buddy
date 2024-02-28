@@ -87,45 +87,40 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
       .toList();
 
   // Update predictions list with latitude and longitude
-  predictionsList.forEach((prediction) {
+  List<PredictionModel> updatedPredictionsList = [];
+  for (var prediction in predictionsList) {
     if (prediction.latitude != null && prediction.longitude != null) {
-      // These are already available, so no need to do anything
+      updatedPredictionsList.add(prediction);
     } else {
       // Fetch latitude and longitude for the place
       String placeId = prediction.place_id ?? "";
       if (placeId.isNotEmpty) {
         String placeDetailsUrl =
             "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=geometry&key=$gMapKey";
-        CommonMethods.sendRequestToAPI(placeDetailsUrl).then((response) {
-          if (response != null &&
-              response["status"] == "OK" &&
-              response["result"] != null &&
-              response["result"]["geometry"] != null &&
-              response["result"]["geometry"]["location"] != null) {
-            var location = response["result"]["geometry"]["location"];
-            prediction.latitude = location["lat"];
-            prediction.longitude = location["lng"];
-            setState(() {
-              if (controller == startingTextEditingController) {
-                startingPredictionsPlacesList = predictionsList;
-              } else {
-                destinationPredictionsPlacesList = predictionsList;
-              }
-            });
-          }
-        });
+        var response = await CommonMethods.sendRequestToAPI(placeDetailsUrl);
+        if (response != null &&
+            response["status"] == "OK" &&
+            response["result"] != null &&
+            response["result"]["geometry"] != null &&
+            response["result"]["geometry"]["location"] != null) {
+          var location = response["result"]["geometry"]["location"];
+          prediction.latitude = location["lat"];
+          prediction.longitude = location["lng"];
+          updatedPredictionsList.add(prediction);
+        }
       }
     }
-  });
+  }
 
   setState(() {
     if (controller == startingTextEditingController) {
-      startingPredictionsPlacesList = predictionsList;
+      startingPredictionsPlacesList = updatedPredictionsList;
     } else {
-      destinationPredictionsPlacesList = predictionsList;
+      destinationPredictionsPlacesList = updatedPredictionsList;
     }
   });
 }
+
 
 
   void _handleGoButtonPressed() {
@@ -134,6 +129,7 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
       widget.onGoButtonPressed!();
 
       Navigator.pop(context);
+      
     }
   }
 
