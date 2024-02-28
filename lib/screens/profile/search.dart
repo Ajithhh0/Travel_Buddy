@@ -71,69 +71,36 @@ class _SearchPageState extends State<SearchPage> {
                       final user = users[index];
                       final buddyId = user.id;
 
-                      return FutureBuilder<DocumentSnapshot>(
-                        future: user.reference
-                            .collection('buddies')
-                            .doc(FirebaseAuth.instance.currentUser!.uid)
-                            .get(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const ListTile(
-                              title: Text('Loading...'),
-                              trailing: CircularProgressIndicator(),
-                            );
-                          }
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                            user['avatar_url'] ?? '',
+                          ),
+                        ),
+                        title: Text(
+                          user['username'] ?? '',
+                        ),
+                        trailing: ElevatedButton(
+                          onPressed: () async {
+                            if (await _isBuddy(buddyId)) {
+                              await _removeBuddy(buddyId);
+                            } else {
+                              await _addBuddy(user);
+                            }
+                            setState(() {});
+                          },
+                          child: FutureBuilder<bool>(
+                            future: _isBuddy(buddyId),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Text('Loading...');
+                              }
 
-                          if (snapshot.hasError) {
-                            return ListTile(
-                              title: Text('Error: ${snapshot.error}'),
-                            );
-                          }
-
-                          final bool isBuddy = snapshot.data!.exists;
-
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(
-                                user['avatar_url'] ?? '',
-                              ),
-                            ),
-                            title: Text(
-                              user['username'] ?? '',
-                            ),
-                            trailing: ElevatedButton(
-                              onPressed: () async {
-  if (isBuddy) {
-    // Remove buddy
-    await user.reference
-        .collection("buddies")
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .delete();
-  } else {
-    // Add buddy
-    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
-    final currentUserData = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUserUid)
-        .get()
-        .then((snapshot) => snapshot.data());
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(buddyId) // Buddy's UID
-        .collection("buddies")
-        .doc(currentUserUid) // Current user's UID
-        .set(currentUserData ?? {});
-  }
-  setState(() {});
-},
-
-                              child: Text(
-                                isBuddy ? "Remove" : "Add",
-                              ),
-                            ),
-                          );
-                        },
+                              return Text(snapshot.data! ? "Remove" : "Add");
+                            },
+                          ),
+                        ),
                       );
                     },
                   );
@@ -143,5 +110,37 @@ class _SearchPageState extends State<SearchPage> {
         ],
       ),
     );
+  }
+
+  Future<bool> _isBuddy(String buddyId) async {
+    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+    final buddyDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserUid)
+        .collection('buddies')
+        .doc(buddyId)
+        .get();
+    return buddyDoc.exists;
+  }
+
+  Future<void> _addBuddy(DocumentSnapshot user) async {
+    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+    final buddyData = user.data() as Map<String, dynamic>;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserUid)
+        .collection("buddies")
+        .doc(user.id)
+        .set(buddyData);
+  }
+
+  Future<void> _removeBuddy(String buddyId) async {
+    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(currentUserUid)
+        .collection("buddies")
+        .doc(buddyId)
+        .delete();
   }
 }
