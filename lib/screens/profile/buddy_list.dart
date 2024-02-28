@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:travel_buddy/screens/profile/buddy_profile.dart';
 
 class BuddyList extends StatefulWidget {
   const BuddyList({Key? key}) : super(key: key);
@@ -56,11 +57,23 @@ class _BuddyListState extends State<BuddyList> {
                   itemCount: buddies.length,
                   itemBuilder: (context, index) {
                     final buddy = buddies[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundImage: NetworkImage(buddy['avatar_url'] ?? ''),
+                    final buddyData = buddy.data() as Map<String, dynamic>;
+                    return GestureDetector(
+                      onTap: () {
+                        // Navigate to buddy's profile page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BuddyProfilePage(buddy: buddyData),
+                          ),
+                        );
+                      },
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(buddyData['avatar_url'] ?? ''),
+                        ),
+                        title: Text(buddyData['username'] ?? ''),
                       ),
-                      title: Text(buddy['username'] ?? ''),
                     );
                   },
                 ),
