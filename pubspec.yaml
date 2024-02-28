@@ -91,7 +91,11 @@ flutter:
     - assets/images/c3.png
     - assets/images/m1.png
     - assets/images/m2.png
-    - assets/images/ss.png
+    - assets/images/jeep ai.jpg
+    - assets/images/jeep00.jpg
+    - assets/images/jeepii.jpg
+    - assets/images/jeep00.png
+
     
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
@@ -125,6 +129,15 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Light.ttf
+          weight: 100
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 400
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 600
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages

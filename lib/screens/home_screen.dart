@@ -42,8 +42,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: const Color.fromARGB(255, 151, 196, 232),
+        shadowColor: Colors.yellow,
         automaticallyImplyLeading: false,
         title: Text(_titles[_selectedIndex]), // Set dynamic title here
+        centerTitle: true,
         actions: [
           IconButton(
               icon: const Icon(Icons.exit_to_app),

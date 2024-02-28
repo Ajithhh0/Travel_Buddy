@@ -4,8 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:travel_buddy/screens/profile/buddy_list.dart';
+import 'package:travel_buddy/screens/profile/editprofile.dart';
 import 'package:travel_buddy/screens/profile/search.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -17,6 +19,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   File? _image;
   String? _avatarUrl;
   String? _username;
+  String? _email;
+  String? _mobile;
+  String? _dob;
+  String? _fullName;
 
   final picker = ImagePicker();
 
@@ -27,14 +33,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-  String userId = FirebaseAuth.instance.currentUser!.uid;
-  DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-  setState(() {
-    _avatarUrl = userDoc['avatar_url'];
-    _username = userDoc['username'];
-  });
-}
-
+    String userId = FirebaseAuth.instance.currentUser!.uid;
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    setState(() {
+      _avatarUrl = userDoc['avatar_url'];
+      _username = userDoc['username'];
+      _email = userDoc['email'];
+      _mobile = userDoc['mobile'];
+      _dob = userDoc['dob'];
+      _fullName = userDoc['full_name'];
+    });
+  }
 
   Future<void> getImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -67,7 +77,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('No image selected.');
     }
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -76,65 +85,102 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Positioned.fill(
             child: Padding(
-              padding: const EdgeInsets.all(5.0),
+              padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 200), // Space for the card
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const SearchPage()),
-                      );
-                    },
-                    child: Ink(
-                      color: Colors.white,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-                        child: Row(
-                          children: [
-                           SizedBox(width: 1),
-                            Text(
-                              'Search a Buddy ?',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
-                              ),
-                            ),
-                          ],
-                        ),
+                  // Display username
+                  Center(
+                    child: Text(
+                      '$_username' ?? 'Loading...',
+                      style: GoogleFonts.poppins(
+                        textStyle: Theme.of(context).textTheme.displayLarge,
+                        fontSize: 30,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 1),
-                  //buddy_list
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const BuddyList()),
-                      );
-                    },
-                    child: Ink(
-                      color: Colors.white,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-                        child: Row(
-                          children: [
-                           SizedBox(width: 1),
-                            Text(
-                              'Buddy List',
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Column(
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const EditProfile()),
+                          );
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                Colors.orange,
+                                Colors.red
+                              ], // Change colors as per your choice
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                                25.0), // Adjust the radius as needed
+                          ),
+                          
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 12.0, horizontal: 16.0),
+                            child: Text(
+                              'Edit Profile',
                               style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 18,
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
+                    ],
+                  ),
+                  const SizedBox(height: 20,),
+                  // Display user details in a table
+                  Table(
+                    defaultColumnWidth: const FlexColumnWidth(1.0),
+                    children: [
+                      _buildTableRow('Full Name:', _fullName ?? 'Loading...'),
+                      _buildTableRow('Email:', _email ?? 'Loading...'),
+                      _buildTableRow('Mobile:', _mobile ?? 'Loading...'),
+                      _buildTableRow('Date of Birth:', _dob ?? 'Loading...'),
+                    ],
+                  ),
+                  const SizedBox(
+                      height: 15), // Space between user details and buttons
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SearchPage()),
+                          );
+                        },
+                        child: const Text('Search a Buddy'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const BuddyList()),
+                          );
+                        },
+                        child: const Text('Buddy List'),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -144,60 +190,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
             top: 10.0,
             left: 5.0,
             right: 5.0,
-            child: Card(
-              elevation: 10,
-              color: Colors.blue,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  GestureDetector(
-                    onTap: getImage,
-                    child: Padding(
-                      padding: const EdgeInsets.all(35.0),
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey[300],
-                        child: _image != null
-                            ? ClipOval(
-                                child: Image.file(
-                                  _image!,
-                                  width: 100,
-                                  height: 100,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            : _avatarUrl != null
-                                ? ClipOval(
-                                    child: Image.network(
-                                      _avatarUrl!,
-                                      width: 100,
-                                      height: 100,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  )
-                                : Icon(
-                                    Icons.camera_alt_outlined,
-                                    size: 40,
-                                    color: Colors.grey[600],
-                                  ),
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      _username ?? 'Loading...',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-                ],
+            child: GestureDetector(
+              onTap: getImage,
+              child: Padding(
+                padding: const EdgeInsets.all(35.0),
+                child: CircleAvatar(
+                  radius: 80, // Increased radius
+                  backgroundColor: Colors.grey[300],
+                  child: _image != null
+                      ? ClipOval(
+                          child: Image.file(
+                            _image!,
+                            width: 160,
+                            height: 160,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : _avatarUrl != null
+                          ? ClipOval(
+                              child: Image.network(
+                                _avatarUrl!,
+                                width: 160,
+                                height: 160,
+                                fit: BoxFit.cover,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.camera_alt_outlined,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
+                ),
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  TableRow _buildTableRow(String title, String value) {
+    return TableRow(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+          child: Text(
+            value,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

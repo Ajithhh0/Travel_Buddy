@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:travel_buddy/firebase_options.dart';
@@ -54,6 +55,7 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
           primaryColor: Colors.amber,
           useMaterial3: true,
+          textTheme: GoogleFonts.poppinsTextTheme(),
         ),
         home: AnimatedSplashScreen(
           splash: Image.asset('assets/images/jeep.png'),
