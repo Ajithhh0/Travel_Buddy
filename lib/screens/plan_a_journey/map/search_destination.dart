@@ -257,7 +257,7 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
                               ),
                             ),
                           ),
-                          ElevatedButton.icon(
+                          TextButton.icon(
                             onPressed: _handleGoButtonPressed,
                             icon: const Icon(Icons.arrow_forward),
                             label: const Text('Go'),

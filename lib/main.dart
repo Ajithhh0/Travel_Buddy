@@ -63,7 +63,7 @@ class MyApp extends StatelessWidget {
           duration: 3000,
           splashTransition: SplashTransition.fadeTransition,
           backgroundColor: Colors.amber,
-          nextScreen: FirebaseAuth.instance.currentUser == null 
+          nextScreen: FirebaseAuth.instance.currentUser == null
           ? const LoginPage()
           : const HomeScreen(),
         ),

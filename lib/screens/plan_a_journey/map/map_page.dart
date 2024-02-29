@@ -200,7 +200,7 @@ class _MapScreenState extends State<MapScreen> {
       strokeWidth: 4,
       radius: 14,
       center: startingGeoGraphicCoOrdinates,
-      fillColor: Colors.pink,
+      fillColor: Colors.green,
     );
 
     Circle destinationPointCircle = Circle(
@@ -229,7 +229,7 @@ class _MapScreenState extends State<MapScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => TripPlanning()),
+                MaterialPageRoute(builder: (context) => const TripPlanning()),
               );
             },
             icon: const Row(

@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -36,12 +37,13 @@ class _SearchPageState extends State<SearchPage> {
               },
             ),
           ),
-          if (username != null && username!.length > 1)
+          if (username != null && username!.length >= 1)
             Expanded(
               child: FutureBuilder<QuerySnapshot>(
                 future: FirebaseFirestore.instance
                     .collection('users')
-                    .where('username', isEqualTo: username)
+                    .where('username', isGreaterThanOrEqualTo: username)
+                    .where('username', isLessThan: username! + 'z')
                     .get(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
