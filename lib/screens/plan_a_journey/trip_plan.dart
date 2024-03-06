@@ -1,9 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:travel_buddy/screens/plan_a_journey/budget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:travel_buddy/screens/plan_a_journey/budget_planner.dart';
+import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
 
 class TripPlanning extends StatefulWidget {
-  const TripPlanning({Key? key}) : super(key: key);
+  final TripDetails tripDetails;
+  const TripPlanning({Key? key, required this.tripDetails}) : super(key: key);
 
   @override
   State<TripPlanning> createState() => _TripPlanningState();
@@ -14,22 +16,27 @@ class _TripPlanningState extends State<TripPlanning> {
   String? username;
   List<Map<String, dynamic>> members = [];
 
+  String? savedTripName; // Define savedTripName
+  List<Map<String, dynamic>> savedMembers = []; // Define savedMembers
+
   @override
   Widget build(BuildContext context) {
+    // Access startingLocation and destinationLocation from tripDetails
+    String? startingLocation = widget.tripDetails.startingLocation;
+    String? destinationLocation = widget.tripDetails.destinationLocation;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trip Planning'),
         centerTitle: true,
         backgroundColor: const Color.fromARGB(255, 151, 196, 232),
-        shadowColor: Color.fromARGB(255, 170, 181, 190),
+        shadowColor: const Color.fromARGB(255, 170, 181, 190),
         elevation: 20,
-        flexibleSpace: ClipRRect(
-          borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(1000),bottomRight: Radius.circular(1000),),
-          // child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage("assets/images/jeep00.jpg"),
-          // fit: BoxFit.fill,
-          // alignment: Alignment.center ),
-          // ) ,
-          // ),
+        flexibleSpace: const ClipRRect(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(1000),
+            bottomRight: Radius.circular(1000),
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -78,7 +85,8 @@ class _TripPlanningState extends State<TripPlanning> {
                       padding: EdgeInsets.all(8.0),
                       child: Text(
                         'Members:',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -89,7 +97,8 @@ class _TripPlanningState extends State<TripPlanning> {
                         final member = members[index];
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: NetworkImage(member['avatar_url'] ?? ''),
+                            backgroundImage:
+                                NetworkImage(member['avatar_url'] ?? ''),
                           ),
                           title: Text(member['username'] ?? ''),
                           trailing: IconButton(
@@ -142,11 +151,13 @@ class _TripPlanningState extends State<TripPlanning> {
                       final user = users[index];
 
                       // Check if the user is already added
-                      bool isAdded = members.any((member) => member['username'] == user['username']);
+                      bool isAdded = members.any(
+                          (member) => member['username'] == user['username']);
 
                       return ListTile(
                         leading: CircleAvatar(
-                          backgroundImage: NetworkImage(user['avatar_url'] ?? ''),
+                          backgroundImage:
+                              NetworkImage(user['avatar_url'] ?? ''),
                         ),
                         title: Text(user['username'] ?? ''),
                         onTap: () {
@@ -171,9 +182,25 @@ class _TripPlanningState extends State<TripPlanning> {
       floatingActionButton: members.isNotEmpty
           ? FloatingActionButton(
               onPressed: () {
-                
-                 Navigator.push(
-        context, MaterialPageRoute(builder: (context) => const BudgetPlanner()));
+                if (members.isNotEmpty) {
+                  savedTripName = tripName;
+                  savedMembers = List.from(members);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BudgetPlanner(
+                        tripName: savedTripName,
+                        savedMembers: savedMembers
+                            .map((member) => Member(
+                                name: member['username'],
+                                avatarUrl: member['avatar_url']))
+                            .toList(),
+                        startingLocation: startingLocation ?? '',
+                        destinationLocation: destinationLocation ?? '',
+                      ),
+                    ),
+                  );
+                }
               },
               child: const Icon(Icons.next_plan),
             )

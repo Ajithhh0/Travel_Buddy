@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:travel_buddy/firebase_options.dart';
 //import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/misc/tripdetailsprovider.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
 //import 'package:travel_buddy/reg/login.dart';
 import 'package:travel_buddy/reg/log1.dart';
@@ -38,7 +39,12 @@ void main() async {
     }
   });
 
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => TripDetailsProvider(), // Your ChangeNotifier here
+      child: MyApp(),
+    ),
+  );
 }
 
 //final supabase = Supabase.instance.client;

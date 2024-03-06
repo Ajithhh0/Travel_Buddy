@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
+import 'display_details.dart';
 
 class BudgetPlanner extends StatefulWidget {
-  const BudgetPlanner({Key? key}) : super(key: key);
+  final String? tripName;
+  final List<Member> savedMembers;
+  final String? startingLocation; // Define startingLocation parameter
+  final String? destinationLocation; // Define destinationLocation parameter
+  const BudgetPlanner({
+    Key? key,
+    required this.tripName,
+    required this.savedMembers,
+    required this.startingLocation,
+    required this.destinationLocation,
+  }) : super(key: key);
 
   @override
   State<BudgetPlanner> createState() => _BudgetPlannerState();
@@ -25,10 +37,13 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
     });
   }
 
+  double get remainingBudget => budget - totalExpenses;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text('Budget'),
       ),
       body: Column(
@@ -174,6 +189,37 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
               ),
           ),
         ],
+      ),
+      bottomNavigationBar: BottomAppBar(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Remaining Budget:'),
+              Text(
+                '${remainingBudget.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ConfirmDetails(
+                tripName: widget.tripName,
+                savedMembers: widget.savedMembers,
+                startingLocation: widget.startingLocation ?? 'Default Starting Location',
+                destinationLocation: widget.destinationLocation ?? 'Default Destination Location',
+              ),
+            ),
+          );
+        },
+        child: const Icon(Icons.arrow_forward),
       ),
     );
   }

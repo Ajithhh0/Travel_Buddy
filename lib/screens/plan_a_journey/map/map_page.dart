@@ -7,10 +7,13 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:travel_buddy/misc/app_info.dart';
 import 'package:travel_buddy/misc/common_methods.dart';
-import 'package:travel_buddy/misc/direction_details.dart';
+import 'package:travel_buddy/misc/detailsvar.dart';
+import 'package:travel_buddy/misc/tripdetailsprovider.dart';
+import 'package:travel_buddy/screens/plan_a_journey/models/direction_details.dart';
 import 'package:travel_buddy/misc/global_var.dart';
 import 'package:travel_buddy/misc/loading.dart';
 import 'package:travel_buddy/screens/plan_a_journey/map/search_destination.dart';
+import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
 import 'package:travel_buddy/screens/plan_a_journey/trip_plan.dart';
 
 class MapScreen extends StatefulWidget {
@@ -52,12 +55,26 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   retrieveDirectionDetails() async {
+    
+
+    TripDetails _createTripDetails() {
+      // Create TripDetails object based on your requirements
+      return TripDetails(
+        tripName: "tripName",
+        directionDetails: tripDirectionDetailsInfo,
+        members: [],
+        budget: Budget(amount: 0.0), // Initialize with 0 budget
+        expenses: [],
+      );
+    }
+
+    Provider.of<TripDetailsProvider>(context, listen: false)
+        .setTripDetails(_createTripDetails());
+
     var startingLocation =
         Provider.of<AppInfo>(context, listen: false).startLocation;
     var destinationLocation =
         Provider.of<AppInfo>(context, listen: false).destinationLocation;
-
-    
 
     if (startingLocation == null || destinationLocation == null) {
       //error if no location selected
@@ -103,6 +120,14 @@ class _MapScreenState extends State<MapScreen> {
     setState(() {
       tripDirectionDetailsInfo = detailsFromDirectionAPI;
     });
+
+    DetailsVar details = DetailsVar(
+      distanceTextString: tripDirectionDetailsInfo!.distanceTextString,
+      durationTextString: tripDirectionDetailsInfo!.durationTextString,
+      distanceValueDigits: tripDirectionDetailsInfo!.distanceValueDigits,
+      durationValueDigits: tripDirectionDetailsInfo!.durationValueDigits,
+      encodedPoints: tripDirectionDetailsInfo!.encodedPoints,
+    );
 
     Navigator.pop(context);
 
@@ -224,25 +249,35 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('Plan Your Journey'),
         actions: [
-        if (tripDirectionDetailsInfo != null)
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TripPlanning()),
-              );
-            },
-            icon: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('Add Trip'),
-                Icon(Icons.add),
-                
-              ],
+          if (tripDirectionDetailsInfo != null)
+            IconButton(
+              onPressed: () {
+               Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) {
+      TripDetails? tripDetails =
+          Provider.of<TripDetailsProvider>(context, listen: false).tripDetails;
+          
+      return tripDetails != null
+          ? TripPlanning(tripDetails: tripDetails)
+          : Container(); // or any other fallback widget or action
+    },
+  ),
+);
+
+
+              },
+              icon: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Add Trip'),
+                  Icon(Icons.add),
+                ],
+              ),
             ),
-          ),
-      ],
-    ),
+        ],
+      ),
       body: Stack(
         children: [
           GoogleMap(
@@ -252,7 +287,7 @@ class _MapScreenState extends State<MapScreen> {
             myLocationEnabled: true,
             polylines: polylineSet,
             markers: markerSet,
-           // circles: circleSet,
+            // circles: circleSet,
             onMapCreated: (GoogleMapController mapController) {
               controllerGoogleMap = mapController;
 
@@ -296,8 +331,6 @@ class _MapScreenState extends State<MapScreen> {
               ),
             ),
           ),
-
-          
 
           ///search location icon button
           Positioned(

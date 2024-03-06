@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:travel_buddy/misc/address_model.dart';
 import 'package:travel_buddy/misc/app_info.dart';
-import 'package:travel_buddy/misc/direction_details.dart';
+import 'package:travel_buddy/screens/plan_a_journey/models/direction_details.dart';
 import 'package:travel_buddy/misc/global_var.dart';
 
 class CommonMethods {

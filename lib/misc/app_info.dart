@@ -6,7 +6,7 @@ class AppInfo extends ChangeNotifier {
   AddressModel? destinationLocation;
 
   void updateStartLocation(AddressModel startModel) {
-    startLocation = startModel; 
+    startLocation = startModel;
     notifyListeners();
   }
 

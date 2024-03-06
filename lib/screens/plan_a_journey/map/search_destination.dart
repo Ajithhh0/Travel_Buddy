@@ -6,6 +6,8 @@ import 'package:travel_buddy/misc/common_methods.dart';
 import 'package:travel_buddy/misc/global_var.dart';
 import 'package:travel_buddy/misc/prediction_place_ui.dart';
 import 'package:travel_buddy/misc/predictions.dart';
+import 'package:travel_buddy/misc/tripdetailsprovider.dart';
+import 'package:travel_buddy/screens/plan_a_journey/trip_plan.dart';
 
 class SearchDestinationPage extends StatefulWidget {
   final VoidCallback onGoButtonPressed;
@@ -37,7 +39,7 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
           desiredAccuracy: LocationAccuracy.bestForNavigation);
       String userAddress = await CommonMethods
           .convertGeoGraphicCoOrdinatesIntoHumanReadableAddress(
-              position, context,true);
+              position, context, true);
       setState(() {
         startingTextEditingController.text = userAddress;
       });
@@ -46,90 +48,92 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
     }
   }
 
-  
-
   searchLocation(String locationName, TextEditingController controller) async {
-  if (locationName.isEmpty) {
-    setState(() {
-      startingPredictionsPlacesList.clear();
-      destinationPredictionsPlacesList.clear();
-    });
-    return;
-  }
+    if (locationName.isEmpty) {
+      setState(() {
+        startingPredictionsPlacesList.clear();
+        destinationPredictionsPlacesList.clear();
+      });
+      return;
+    }
 
-  String apiPlacesUrl =
-      "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$locationName&key=$gMapKey";
+    String apiPlacesUrl =
+        "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$locationName&key=$gMapKey";
 
-  var responseFromPlacesAPI =
-      await CommonMethods.sendRequestToAPI(apiPlacesUrl);
+    var responseFromPlacesAPI =
+        await CommonMethods.sendRequestToAPI(apiPlacesUrl);
 
-  if (responseFromPlacesAPI == "error") {
-    // Handle API request error
-    print("Error: Failed to fetch predictions from Places API");
-    return;
-  }
+    if (responseFromPlacesAPI == "error") {
+      // Handle API request error
+      print("Error: Failed to fetch predictions from Places API");
+      return;
+    }
 
-  if (responseFromPlacesAPI["status"] != "OK") {
-    // Handle API response status other than "OK"
-    print("Error: Unexpected status from Places API");
-    return;
-  }
+    if (responseFromPlacesAPI["status"] != "OK") {
+      // Handle API response status other than "OK"
+      print("Error: Unexpected status from Places API");
+      return;
+    }
 
-  var predictionResultInJson = responseFromPlacesAPI["predictions"];
-  if (predictionResultInJson == null || !(predictionResultInJson is List)) {
-    // Handle unexpected data format in API response
-    print("Error: Unexpected data format in predictions response");
-    return;
-  }
+    var predictionResultInJson = responseFromPlacesAPI["predictions"];
+    if (predictionResultInJson == null || !(predictionResultInJson is List)) {
+      // Handle unexpected data format in API response
+      print("Error: Unexpected data format in predictions response");
+      return;
+    }
 
-  var predictionsList = predictionResultInJson
-      .map((eachPlacePrediction) => PredictionModel.fromJson(eachPlacePrediction))
-      .toList();
+    var predictionsList = predictionResultInJson
+        .map((eachPlacePrediction) =>
+            PredictionModel.fromJson(eachPlacePrediction))
+        .toList();
 
-  // Update predictions list with latitude and longitude
-  List<PredictionModel> updatedPredictionsList = [];
-  for (var prediction in predictionsList) {
-    if (prediction.latitude != null && prediction.longitude != null) {
-      updatedPredictionsList.add(prediction);
-    } else {
-      // Fetch latitude and longitude for the place
-      String placeId = prediction.place_id ?? "";
-      if (placeId.isNotEmpty) {
-        String placeDetailsUrl =
-            "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=geometry&key=$gMapKey";
-        var response = await CommonMethods.sendRequestToAPI(placeDetailsUrl);
-        if (response != null &&
-            response["status"] == "OK" &&
-            response["result"] != null &&
-            response["result"]["geometry"] != null &&
-            response["result"]["geometry"]["location"] != null) {
-          var location = response["result"]["geometry"]["location"];
-          prediction.latitude = location["lat"];
-          prediction.longitude = location["lng"];
-          updatedPredictionsList.add(prediction);
+    // Update predictions list with latitude and longitude
+    List<PredictionModel> updatedPredictionsList = [];
+    for (var prediction in predictionsList) {
+      if (prediction.latitude != null && prediction.longitude != null) {
+        updatedPredictionsList.add(prediction);
+      } else {
+        // Fetch latitude and longitude for the place
+        String placeId = prediction.place_id ?? "";
+        if (placeId.isNotEmpty) {
+          String placeDetailsUrl =
+              "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&fields=geometry&key=$gMapKey";
+          var response = await CommonMethods.sendRequestToAPI(placeDetailsUrl);
+          if (response != null &&
+              response["status"] == "OK" &&
+              response["result"] != null &&
+              response["result"]["geometry"] != null &&
+              response["result"]["geometry"]["location"] != null) {
+            var location = response["result"]["geometry"]["location"];
+            prediction.latitude = location["lat"];
+            prediction.longitude = location["lng"];
+            updatedPredictionsList.add(prediction);
+          }
         }
       }
     }
+
+    setState(() {
+      if (controller == startingTextEditingController) {
+        startingPredictionsPlacesList = updatedPredictionsList;
+      } else {
+        destinationPredictionsPlacesList = updatedPredictionsList;
+      }
+    });
   }
-
-  setState(() {
-    if (controller == startingTextEditingController) {
-      startingPredictionsPlacesList = updatedPredictionsList;
-    } else {
-      destinationPredictionsPlacesList = updatedPredictionsList;
-    }
-  });
-}
-
-
 
   void _handleGoButtonPressed() {
     // Call the onGoButtonPressed callback if provided
     if (widget.onGoButtonPressed != null) {
       widget.onGoButtonPressed!();
 
-      Navigator.pop(context);
       
+      Navigator.pop(context);
+
+      //     Navigator.push(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => TripPlanning(tripDetails: tripDetails!)),
+      // );
     }
   }
 
