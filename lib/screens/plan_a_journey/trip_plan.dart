@@ -15,9 +15,13 @@ class _TripPlanningState extends State<TripPlanning> {
   String? tripName;
   String? username;
   List<Map<String, dynamic>> members = [];
+  late List<Member> savedMembers; // Define savedMembers
 
-  String? savedTripName; // Define savedTripName
-  List<Map<String, dynamic>> savedMembers = []; // Define savedMembers
+  @override
+  void initState() {
+    super.initState();
+    savedMembers = []; // Initialize savedMembers list
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +33,10 @@ class _TripPlanningState extends State<TripPlanning> {
       appBar: AppBar(
         title: const Text('Trip Planning'),
         centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         backgroundColor: const Color.fromARGB(255, 151, 196, 232),
-        shadowColor: const Color.fromARGB(255, 170, 181, 190),
         elevation: 20,
         flexibleSpace: const ClipRRect(
           borderRadius: BorderRadius.only(
@@ -92,6 +98,7 @@ class _TripPlanningState extends State<TripPlanning> {
                     const SizedBox(height: 8),
                     ListView.builder(
                       shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
                       itemCount: members.length,
                       itemBuilder: (context, index) {
                         final member = members[index];
@@ -106,6 +113,7 @@ class _TripPlanningState extends State<TripPlanning> {
                             onPressed: () {
                               setState(() {
                                 members.removeAt(index);
+                                savedMembers.removeAt(index); // Remove member from savedMembers
                               });
                             },
                           ),
@@ -146,6 +154,7 @@ class _TripPlanningState extends State<TripPlanning> {
 
                   return ListView.builder(
                     shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
@@ -167,7 +176,16 @@ class _TripPlanningState extends State<TripPlanning> {
                               members.add({
                                 'avatar_url': user['avatar_url'],
                                 'username': user['username'],
+                                'uid': user.id, // Add UID of the user
                               });
+                              print('Added user UID: ${user.id}');
+
+                              // Add UID to savedMembers
+                              savedMembers.add(Member(
+                                name: user['username'],
+                                avatarUrl: user['avatar_url'],
+                                uid: user.id,
+                              ));
                             });
                           }
                         },
@@ -183,18 +201,12 @@ class _TripPlanningState extends State<TripPlanning> {
           ? FloatingActionButton(
               onPressed: () {
                 if (members.isNotEmpty) {
-                  savedTripName = tripName;
-                  savedMembers = List.from(members);
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => BudgetPlanner(
-                        tripName: savedTripName,
-                        savedMembers: savedMembers
-                            .map((member) => Member(
-                                name: member['username'],
-                                avatarUrl: member['avatar_url']))
-                            .toList(),
+                        tripName: tripName,
+                        savedMembers: savedMembers, // Pass savedMembers directly
                         startingLocation: startingLocation ?? '',
                         destinationLocation: destinationLocation ?? '',
                       ),

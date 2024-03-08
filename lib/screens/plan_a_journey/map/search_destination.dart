@@ -6,7 +6,7 @@ import 'package:travel_buddy/misc/common_methods.dart';
 import 'package:travel_buddy/misc/global_var.dart';
 import 'package:travel_buddy/misc/prediction_place_ui.dart';
 import 'package:travel_buddy/misc/predictions.dart';
-import 'package:travel_buddy/misc/tripdetailsprovider.dart';
+
 import 'package:travel_buddy/screens/plan_a_journey/trip_plan.dart';
 
 class SearchDestinationPage extends StatefulWidget {

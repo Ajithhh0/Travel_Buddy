@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
 import 'display_details.dart';
 
 class BudgetPlanner extends StatefulWidget {
   final String? tripName;
   final List<Member> savedMembers;
-  final String? startingLocation; // Define startingLocation parameter
-  final String? destinationLocation; // Define destinationLocation parameter
+  final String? startingLocation;
+  final String? destinationLocation;
   const BudgetPlanner({
     Key? key,
     required this.tripName,
@@ -20,15 +22,10 @@ class BudgetPlanner extends StatefulWidget {
 }
 
 class _BudgetPlannerState extends State<BudgetPlanner> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   double budget = 0.0;
   double totalExpenses = 0.0;
   final List<Map<String, dynamic>> expenses = [];
-
-  void setBudget(double amount) {
-    setState(() {
-      budget = amount;
-    });
-  }
 
   void addExpense(String description, double amount) {
     setState(() {
@@ -39,13 +36,38 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
 
   double get remainingBudget => budget - totalExpenses;
 
+  Future<void> saveToDatabase() async {
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser != null) {
+    final userDocRef = FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
+
+    final tripsCollectionRef = userDocRef.collection('trips');
+    final tripDocRef = tripsCollectionRef.doc(widget.tripName);
+
+    // Reference to the budget_details collection inside the trip
+    final budgetDetailsCollectionRef = tripDocRef.collection('budget_details');
+
+    // Save budget details directly as documents inside the budget_details collection
+    await budgetDetailsCollectionRef.doc('details').set({
+      'budget': budget,
+      'expenses': expenses,
+      'remaining_budget': remainingBudget,
+    });
+  }
+}
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Budget'),
+         shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        backgroundColor: const Color.fromARGB(255, 151, 196, 232),
       ),
+      
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -62,7 +84,6 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
                 children: [
                   TextButton(
                     onPressed: () {
-                      // Display dialog to set budget
                       showDialog(
                         context: context,
                         builder: (BuildContext context) {
@@ -73,7 +94,9 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
                               decoration: const InputDecoration(
                                   labelText: 'Enter Budget'),
                               onChanged: (value) {
-                                setBudget(double.tryParse(value) ?? 0.0);
+                                setState(() {
+                                  budget = double.tryParse(value) ?? 0.0;
+                                });
                               },
                             ),
                             actions: [
@@ -84,7 +107,8 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
                                 child: const Text('Cancel'),
                               ),
                               TextButton(
-                                onPressed: () {
+                                onPressed: () async {
+                                  await saveToDatabase();
                                   Navigator.of(context).pop();
                                 },
                                 child: const Text('Save'),
@@ -206,7 +230,8 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
+          await saveToDatabase();
           Navigator.push(
             context,
             MaterialPageRoute(

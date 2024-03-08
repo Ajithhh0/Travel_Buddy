@@ -23,11 +23,20 @@ class TripDetails {
 class Member {
   final String name;
   final String avatarUrl;
+  final String uid;
 
   Member({
     required this.name,
     required this.avatarUrl,
+    required this.uid,
   });
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'avatar_url': avatarUrl,
+     // 'uid': uid,
+    };
+  }
 }
 
 class Budget {
