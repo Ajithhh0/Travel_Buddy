@@ -22,7 +22,7 @@ class BudgetPlanner extends StatefulWidget {
 }
 
 class _BudgetPlannerState extends State<BudgetPlanner> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  //final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   double budget = 0.0;
   double totalExpenses = 0.0;
   final List<Map<String, dynamic>> expenses = [];
@@ -39,22 +39,25 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
   Future<void> saveToDatabase() async {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser != null) {
-    final userDocRef = FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
+    final userDocRef =
+        FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
+    final tripDetailsDocumentRef = userDocRef
+        .collection('trips')
+        .doc(widget.tripName); // Reference to trip document directly
 
-    final tripsCollectionRef = userDocRef.collection('trips');
-    final tripDocRef = tripsCollectionRef.doc(widget.tripName);
+    // Create a new collection named "budget" inside the trip document
+    final budgetCollectionRef = tripDetailsDocumentRef.collection('budget');
 
-    // Reference to the budget_details collection inside the trip
-    final budgetDetailsCollectionRef = tripDocRef.collection('budget_details');
-
-    // Save budget details directly as documents inside the budget_details collection
-    await budgetDetailsCollectionRef.doc('details').set({
+    // Save trip details directly under the trip document
+    await budgetCollectionRef.doc('details').set({
       'budget': budget,
       'expenses': expenses,
+      'total_expenses': totalExpenses,
       'remaining_budget': remainingBudget,
     });
   }
 }
+
 
   @override
   Widget build(BuildContext context) {
@@ -62,12 +65,11 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Budget'),
-         shape: const RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
         backgroundColor: const Color.fromARGB(255, 151, 196, 232),
       ),
-      
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -238,8 +240,10 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
               builder: (context) => ConfirmDetails(
                 tripName: widget.tripName,
                 savedMembers: widget.savedMembers,
-                startingLocation: widget.startingLocation ?? 'Default Starting Location',
-                destinationLocation: widget.destinationLocation ?? 'Default Destination Location',
+                startingLocation:
+                    widget.startingLocation ?? 'Default Starting Location',
+                destinationLocation: widget.destinationLocation ??
+                    'Default Destination Location',
               ),
             ),
           );

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/screens/home_screen.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
 
 class ConfirmDetails extends StatefulWidget {
@@ -31,8 +32,10 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
     super.initState();
     // Retrieve start and destination locations from the provider
     final appInfo = Provider.of<AppInfo>(context, listen: false);
-    startLocation = appInfo.startLocation?.humanReadableAddress ?? 'Not Available';
-    destinationLocation = appInfo.destinationLocation?.humanReadableAddress ?? 'Not Available';
+    startLocation =
+        appInfo.startLocation?.humanReadableAddress ?? 'Not Available';
+    destinationLocation =
+        appInfo.destinationLocation?.humanReadableAddress ?? 'Not Available';
     savedMembers = widget.savedMembers; // Initialize savedMembers here
   }
 
@@ -40,19 +43,37 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
   final currentUser = FirebaseAuth.instance.currentUser;
   if (currentUser != null) {
     final userDocRef = FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-    final tripDetailsCollectionRef = userDocRef.collection('trips').doc(widget.tripName).collection('trip_details');
+    final tripDetailsDocumentRef = userDocRef.collection('trips').doc(widget.tripName); // Reference to trip document directly
 
-    final List<String> memberUserIds = savedMembers.map((member) => member.uid).toList();
+    // Get DocumentReferences to user documents for each member
+    final List<DocumentReference> memberRefs = savedMembers.map((member) =>
+      FirebaseFirestore.instance.collection('users').doc(member.uid)).toList();
 
-    // Save trip details directly under the "trip_details" collection
-    await tripDetailsCollectionRef.doc('trip_details').set({
+    // Save trip details directly under the trip document
+    await tripDetailsDocumentRef.set({
       'trip_name': widget.tripName,
       'starting_from': startLocation,
       'destination': destinationLocation,
-      'members': memberUserIds, // Use only the user IDs
+      'members': memberRefs,
+      'created_at': DateTime.now().toIso8601String(),
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Your trip has been created.'),
+      ),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
   }
 }
+
+ 
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +94,8 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
             Center(
               child: Text(
                 'Trip Name: ${widget.tripName ?? ''}',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 10),

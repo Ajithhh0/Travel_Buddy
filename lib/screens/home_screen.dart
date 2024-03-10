@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
   static final List<Widget> _widgetOptions = <Widget>[
     Home(),
-    TripScreen(),
+    Trips(),
     UpcomingScreen(),
     ChatScreen(),
     ProfileScreen(),
