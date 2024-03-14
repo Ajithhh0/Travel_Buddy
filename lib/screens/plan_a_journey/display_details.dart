@@ -56,6 +56,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
       'destination': destinationLocation,
       'members': memberRefs,
       'created_at': DateTime.now().toIso8601String(),
+      'status': 1, // Set default status to 1
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -70,10 +71,6 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
     );
   }
 }
-
- 
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -136,7 +133,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
             ),
             const SizedBox(height: 10),
             Card(
-              color: Colors.grey,
+              color: const Color.fromARGB(255, 151, 196, 232),
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: savedMembers.length,
@@ -160,7 +157,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
           topRight: Radius.circular(20),
         ),
         child: BottomAppBar(
-          color: Colors.grey,
+          color: const Color.fromARGB(255, 151, 196, 232),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
