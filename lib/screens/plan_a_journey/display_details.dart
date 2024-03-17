@@ -1,21 +1,24 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:travel_buddy/misc/app_info.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
+import 'package:intl/intl.dart';
 
+typedef TripAcceptedCallback = void Function();
 class ConfirmDetails extends StatefulWidget {
   final String? tripName;
   final List<Member> savedMembers;
+  final TripAcceptedCallback? onTripAccepted;
 
   const ConfirmDetails({
     Key? key,
     this.tripName,
     required this.savedMembers,
     required String startingLocation,
-    required String destinationLocation,
+    required String destinationLocation, this.onTripAccepted,
   }) : super(key: key);
 
   @override
@@ -39,38 +42,96 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
     savedMembers = widget.savedMembers; // Initialize savedMembers here
   }
 
- Future<void> saveToDatabase() async {
-  final currentUser = FirebaseAuth.instance.currentUser;
-  if (currentUser != null) {
-    final userDocRef = FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-    final tripDetailsDocumentRef = userDocRef.collection('trips').doc(widget.tripName); // Reference to trip document directly
+  Future<void> saveToDatabase() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      final userDocRef =
+          FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
+      final tripDetailsDocumentRef =
+          userDocRef.collection('trips').doc(widget.tripName);
 
-    // Get DocumentReferences to user documents for each member
-    final List<DocumentReference> memberRefs = savedMembers.map((member) =>
-      FirebaseFirestore.instance.collection('users').doc(member.uid)).toList();
+      final List<DocumentReference> memberRefs = savedMembers
+          .map((member) =>
+              FirebaseFirestore.instance.collection('users').doc(member.uid))
+          .toList();
 
-    // Save trip details directly under the trip document
-    await tripDetailsDocumentRef.set({
+      
+      final formattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+      // Save trip details directly under the trip document
+      await tripDetailsDocumentRef.set({
+        'trip_name': widget.tripName,
+        'starting_from': startLocation,
+        'destination': destinationLocation,
+        'members': memberRefs,
+        'created_at': formattedDate,
+        'status': 1,
+      });
+
+      // Send trip requests to all members
+      for (final member in savedMembers) {
+        await sendTripRequest(currentUser.uid, member.uid, formattedDate);
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Your trip has been created.'),
+        ),
+      );
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    }
+  }
+
+  Future<void> sendTripRequest(
+      String senderUid, String recipientUid, String formattedDate) async {
+    final tripRequestData = {
       'trip_name': widget.tripName,
       'starting_from': startLocation,
       'destination': destinationLocation,
-      'members': memberRefs,
-      'created_at': DateTime.now().toIso8601String(),
-      'status': 1, // Set default status to 1
-    });
+      'sender_uid': senderUid,
+      'recipient_uid': recipientUid,
+      'acceptance_status': 1, // Default to 1
+      'created_at': formattedDate,
+    };
+
+    // Store trip request directly under recipient's UID in trip_requests_pending collection
+    final tripRequestRef = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(recipientUid)
+        .collection('trip_requests_pending')
+        .add(tripRequestData);
+
+      print('Trip request sent to: $recipientUid, Document ID: ${tripRequestRef.id}');
+
+    // Check the acceptance status
+    if (tripRequestData['acceptance_status'] == 2) {
+      
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(recipientUid)
+          .collection('trips')
+          .doc(widget.tripName)
+          .set({
+        'trip_name': widget.tripName,
+        'starting_from': startLocation,
+        'destination': destinationLocation,
+        'status': 1,
+        'created_at': formattedDate,
+      });
+      widget.onTripAccepted?.call();
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Your trip has been created.'),
+        content: const Text('Your trip request has been sent.'),
       ),
     );
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
-    );
   }
-}
+
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +225,9 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  onPressed: saveToDatabase,
+                  onPressed: () {
+                    saveToDatabase();
+                  },
                   child: const Text('Create Trip'),
                 ),
               ],
