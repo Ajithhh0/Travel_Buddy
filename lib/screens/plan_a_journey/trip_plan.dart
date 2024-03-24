@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:travel_buddy/screens/plan_a_journey/budget_planner.dart';
+
+import 'package:travel_buddy/screens/plan_a_journey/display_details.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
 
 class TripPlanning extends StatefulWidget {
@@ -36,7 +37,7 @@ class _TripPlanningState extends State<TripPlanning> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: const Color.fromARGB(255, 151, 196, 232),
+        backgroundColor:  Colors.blue,
         elevation: 20,
         flexibleSpace: const ClipRRect(
           borderRadius: BorderRadius.only(
@@ -154,7 +155,7 @@ class _TripPlanningState extends State<TripPlanning> {
 
                   return ListView.builder(
                     shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
+                    physics: const NeverScrollableScrollPhysics(),
                     itemCount: users.length,
                     itemBuilder: (context, index) {
                       final user = users[index];
@@ -176,7 +177,7 @@ class _TripPlanningState extends State<TripPlanning> {
                               members.add({
                                 'avatar_url': user['avatar_url'],
                                 'username': user['username'],
-                                'uid': user.id, // Add UID of the user
+                                'uid': user.id,
                               });
                               print('Added user UID: ${user.id}');
 
@@ -197,26 +198,27 @@ class _TripPlanningState extends State<TripPlanning> {
           ],
         ),
       ),
-      floatingActionButton: members.isNotEmpty
-          ? FloatingActionButton(
-              onPressed: () {
-                if (members.isNotEmpty) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BudgetPlanner(
-                        tripName: tripName,
-                        savedMembers: savedMembers, // Pass savedMembers directly
-                        startingLocation: startingLocation ?? '',
-                        destinationLocation: destinationLocation ?? '',
-                      ),
-                    ),
-                  );
-                }
-              },
-              child: const Icon(Icons.next_plan),
-            )
-          : null,
+     floatingActionButton: members.isNotEmpty
+    ? FloatingActionButton(
+        onPressed: () {
+          if (members.isNotEmpty) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ConfirmDetails(
+                 tripName: tripName,
+                 savedMembers: savedMembers, // Pass savedMembers directly
+                 startingLocation: startingLocation ?? '',
+                 destinationLocation: destinationLocation ?? '',
+                ),
+              ),
+            );
+          }
+        },
+        child: const Icon(Icons.arrow_forward),
+      )
+    : null,
+
     );
   }
 }

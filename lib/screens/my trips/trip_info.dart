@@ -1,17 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
- // Importing Budget.dart
 
-class TripInfo extends StatelessWidget {
+class TripInfo extends StatefulWidget {
   final Map<String, dynamic> tripData;
 
   const TripInfo({Key? key, required this.tripData}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final List<dynamic> memberReferences = tripData['members'];
+  _TripInfoState createState() => _TripInfoState();
+}
 
+class _TripInfoState extends State<TripInfo> {
+  late List<dynamic> memberReferences;
+  late DocumentReference creatorRef;
+
+  @override
+  void initState() {
+    super.initState();
+    memberReferences = widget.tripData['members'];
+    creatorRef = widget.tripData['created_by'];
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trip Details'),
@@ -19,7 +31,7 @@ class TripInfo extends StatelessWidget {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: const Color.fromARGB(255, 151, 196, 232),
+        backgroundColor: Colors.blue,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -29,13 +41,11 @@ class TripInfo extends StatelessWidget {
             // Trip details
             Center(
               child: Text(
-                '${tripData['trip_name']}',
-                style:
-                    const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                '${widget.tripData['trip_name']}',
+                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 12.0),
-
             SizedBox(
               width: double.infinity,
               child: Container(
@@ -48,22 +58,46 @@ class TripInfo extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Starting From: ${tripData['starting_from']}'),
+                    Text('Starting From: ${widget.tripData['starting_from']}'),
                     const SizedBox(height: 8.0),
-                    Text('Destination: ${tripData['destination']}'),
+                    Text('Destination: ${widget.tripData['destination']}'),
                     const SizedBox(height: 8.0),
-                    Text('Created At: ${tripData['created_at']}'),
+                    Text('Created At: ${widget.tripData['created_at']}'),
                   ],
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
             const Text(
               'Members:',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
+            FutureBuilder<DocumentSnapshot>(
+              future: creatorRef.get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                }
+                if (!snapshot.hasData) {
+                  return const Text('No data found');
+                }
+                final creatorData = snapshot.data!.data() as Map<String, dynamic>;
+                final creatorName = creatorData['username'];
+                final creatorAvatarUrl = creatorData['avatar_url'];
+
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(creatorAvatarUrl),
+                  ),
+                  title: Text(creatorName),
+                  subtitle: const Text('Trip Admin'),
+                );
+              },
+            ),
             Expanded(
               child: ListView.builder(
                 itemCount: memberReferences.length,
@@ -83,8 +117,7 @@ class TripInfo extends StatelessWidget {
                         return const Text('No data found');
                       }
 
-                      final userData =
-                          snapshot.data!.data() as Map<String, dynamic>;
+                      final userData = snapshot.data!.data() as Map<String, dynamic>;
                       final userName = userData['username'];
                       final avatarUrl = userData['avatar_url'];
 
@@ -103,19 +136,40 @@ class TripInfo extends StatelessWidget {
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ViewBudget(tripName: '',)), // Navigate to Budget.dart
-            );
-          },
-          child: Container(
-            height: 50,
-            alignment: Alignment.center,
-            child: const Text('Budget'),
-          ),
+        child: Row(
+          children: [
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => const ViewBudget(
+                            tripName: '',
+                          )),
+                );
+              },
+              child: Container(
+                height: 40,
+                alignment: Alignment.bottomLeft,
+                child: const Text('Budget'),
+              ),
+            ),
+          ],
         ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const ViewBudget(
+                      tripName: '',
+                    )),
+          );
+        },
+        label: const Text('Start Trip'),
+        icon: const Icon(Icons.start_outlined),
       ),
     );
   }

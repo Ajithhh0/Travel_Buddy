@@ -9,7 +9,7 @@ import 'package:travel_buddy/screens/chat/chats.dart';
 import 'package:travel_buddy/screens/home.dart';
 import 'package:travel_buddy/screens/my%20trips/trips.dart';
 import 'package:travel_buddy/screens/profile/profile.dart';
-import 'package:travel_buddy/screens/trip_requests.dart/trip_requests.dart.dart';
+import 'package:travel_buddy/screens/trip_requests.dart/trip_requests.dart';
 
 class HomeScreen extends StatefulWidget {
  const HomeScreen({Key? key}) : super(key: key);

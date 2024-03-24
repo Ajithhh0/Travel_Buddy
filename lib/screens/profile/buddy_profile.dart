@@ -16,6 +16,12 @@ class _BuddyProfilePageState extends State<BuddyProfilePage> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
+      appBar: AppBar(title: Text('${widget.buddy['username'] ?? 'N/A'}\'s Profile'),
+      centerTitle: true,
+       shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        backgroundColor: Colors.blue,),
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -32,17 +38,21 @@ class _BuddyProfilePageState extends State<BuddyProfilePage> {
                   radius: screenWidth * 0.2,
                 ),
               ),
-              SizedBox(height: screenHeight * 0.02),
+              SizedBox(height: screenHeight * 0.03),
+               Center(
+                 child: Text(
+                  '${widget.buddy['username'] ?? 'N/A'}',
+                  style: TextStyle(fontSize: screenWidth * 0.07,
+                                   fontWeight: FontWeight.bold ),
+                               ),
+               ),
+              SizedBox(height: screenHeight * 0.05),
               Text(
                 'Name: ${widget.buddy['full_name'] ?? 'N/A'}',
                 style: TextStyle(fontSize: screenWidth * 0.05),
               ),
               SizedBox(height: screenHeight * 0.01),
-              Text(
-                'Username: ${widget.buddy['username'] ?? 'N/A'}',
-                style: TextStyle(fontSize: screenWidth * 0.05),
-              ),
-              SizedBox(height: screenHeight * 0.01),
+             
               Text(
                 'Email: ${widget.buddy['email'] ?? 'N/A'}',
                 style: TextStyle(fontSize: screenWidth * 0.05),

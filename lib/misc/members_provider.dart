@@ -7,7 +7,10 @@ class MemberRefsProvider with ChangeNotifier {
  List<DocumentReference> get memberRefs => _memberRefs;
 
  void updateMemberRefs(List<DocumentReference> newRefs) {
-    _memberRefs = newRefs;
-    notifyListeners(); // Notify listeners to rebuild UI with new data
+    Future.delayed(Duration.zero, () {
+      _memberRefs = newRefs;
+      notifyListeners();
+      print('Updated memberRefs: $_memberRefs');
+    });
  }
 }

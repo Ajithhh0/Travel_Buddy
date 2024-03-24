@@ -44,6 +44,11 @@ class _EditProfileState extends State<EditProfile> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Profile'),
+        centerTitle: true,
+         shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
         child: Padding(

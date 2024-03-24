@@ -5,55 +5,52 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:travel_buddy/firebase_options.dart';
-//import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'package:travel_buddy/misc/app_info.dart';
+import 'package:travel_buddy/misc/members_provider.dart';
 import 'package:travel_buddy/misc/tripdetailsprovider.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
-//import 'package:travel_buddy/reg/login.dart';
 import 'package:travel_buddy/reg/log1.dart';
 
+
+
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+ WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
+ await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
-  );
+ );
 
-  // Ensure that plugins are initialized
-  // await Supabase.initialize(
-  //   url: 'https://iaszvhcisppniciyrmsm.supabase.co',
-  //   anonKey:
-  //       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlhc3p2aGNpc3BwbmljaXlybXNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDcxMTI2NjcsImV4cCI6MjAyMjY4ODY2N30.v70IdRrf16oMBhNNtJnzkDQkAWb0RxTShGrhnslus2M',
-  // );
-
-  FirebaseAuth.instance.authStateChanges().listen((User? user) {
+ FirebaseAuth.instance.authStateChanges().listen((User? user) {
     if (user == null) {
-      
       print('User is signed out');
     } else {
-     
       print('User is signed in: ${user.uid}');
-      
     }
-  });
+ });
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (context) => TripDetailsProvider(), // Your ChangeNotifier here
+ runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => TripDetailsProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => MemberRefsProvider(), // Add the MemberRefsProvider here
+        ),
+      ],
       child: MyApp(),
     ),
-  );
+ );
 }
 
-//final supabase = Supabase.instance.client;
-
 class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
+ @override
+ Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => AppInfo(), // Your ChangeNotifier here
+      create: (context) => AppInfo(), 
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Travel Buddy',
@@ -70,20 +67,10 @@ class MyApp extends StatelessWidget {
           splashTransition: SplashTransition.fadeTransition,
           backgroundColor: Colors.amber,
           nextScreen: FirebaseAuth.instance.currentUser == null
-          ? const LoginPage()
-          : const HomeScreen(),
+              ? const LoginPage()
+              : const HomeScreen(),
         ),
       ),
     );
-  }
-
-  // Widget _getNextScreen() {
-  //   // Check if user is logged in or not
-  //   final isLoggedIn = supabase.auth.currentUser != null;
-  //   if (isLoggedIn) {
-  //     return const HomeScreen();
-  //   } else {
-  //     return const LoginPage();
-  //   }
-  // }
+ }
 }

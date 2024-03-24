@@ -39,6 +39,51 @@ class _MapScreenState extends State<MapScreen> {
   Set<Marker> markerSet = {};
   Set<Circle> circleSet = {};
 
+  @override
+ void initState() {
+    super.initState();
+    checkLocationServices();
+ }
+
+ Future<void> checkLocationServices() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Location Services Disabled'),
+            content: const Text(
+                'Please enable location services for this app.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                 Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          // Permissions are denied.
+          // Disable location features of your app or show a message to the user.
+        }
+      }
+    }
+ }
+
+
   getCurrentLiveLocationUser() async {
     Position positionOfUser = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation);

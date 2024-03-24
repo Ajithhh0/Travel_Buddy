@@ -193,7 +193,7 @@ class _BudgetPlannerState extends State<BudgetPlanner> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 10), 
           DataTable(
             columns: const [
               DataColumn(label: Text('Description')),

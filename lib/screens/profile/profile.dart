@@ -86,103 +86,99 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 200), // Space for the card
-                  // Display username
-                  Center(
-                    child: Text(
-                      '$_username' ?? 'Loading...',
-                      style: GoogleFonts.poppins(
-                        textStyle: Theme.of(context).textTheme.displayLarge,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w700,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 200), // Space for the card
+                    // Display username
+                    Center(
+                      child: Text(
+                        '$_username' ?? 'Loading...',
+                        style: GoogleFonts.poppins(
+                          textStyle: Theme.of(context).textTheme.displayLarge,
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Column(
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const EditProfile()),
-                          );
-                        },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [
-                                Colors.orange,
-                                Colors.red
-                              ], // Change colors as per your choice
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Column(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const EditProfile()),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors
+                                .white,
+                                backgroundColor: Colors
+                                .orange, // Use a solid color for the button's text and icon
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                  25.0), // Adjust the radius as needed
                             ),
-                            borderRadius: BorderRadius.circular(
-                                25.0), // Adjust the radius as needed
-                          ),
-                          
-                          child: const Padding(
                             padding: EdgeInsets.symmetric(
                                 vertical: 12.0, horizontal: 16.0),
-                            child: Text(
-                              'Edit Profile',
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                          ),
+                          child: const Text(
+                            'Edit Profile',
+                            style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20,),
-                  // Display user details in a table
-                  Table(
-                    defaultColumnWidth: const FlexColumnWidth(1.0),
-                    children: [
-                      _buildTableRow('Full Name:', _fullName ?? 'Loading...'),
-                      _buildTableRow('Email:', _email ?? 'Loading...'),
-                      _buildTableRow('Mobile:', _mobile ?? 'Loading...'),
-                      _buildTableRow('Date of Birth:', _dob ?? 'Loading...'),
-                    ],
-                  ),
-                  const SizedBox(
-                      height: 15), // Space between user details and buttons
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const SearchPage()),
-                          );
-                        },
-                        child: const Text('Search a Buddy'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const BuddyList()),
-                          );
-                        },
-                        child: const Text('Buddy List'),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    // Display user details in a table
+                    Table(
+                      defaultColumnWidth: const FlexColumnWidth(1.0),
+                      children: [
+                        _buildTableRow('Full Name:', _fullName ?? 'Loading...'),
+                        _buildTableRow('Email:', _email ?? 'Loading...'),
+                        _buildTableRow('Mobile:', _mobile ?? 'Loading...'),
+                        _buildTableRow('Date of Birth:', _dob ?? 'Loading...'),
+                      ],
+                    ),
+                    const SizedBox(
+                        height: 15), // Space between user details and buttons
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const SearchPage()),
+                            );
+                          },
+                          child: const Text('Search a Buddy'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const BuddyList()),
+                            );
+                          },
+                          child: const Text('Buddy List'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

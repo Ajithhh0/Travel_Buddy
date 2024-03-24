@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:travel_buddy/screens/my%20trips/trip_info.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
-import 'archived.dart';
 
 class Trips extends StatefulWidget {
   @override
@@ -12,10 +11,25 @@ class Trips extends StatefulWidget {
 }
 
 class _TripsState extends State<Trips> {
-  bool _showMyTrips = true; // Flag to show only trips with status 1 by default
+  bool _showMyTrips = true;
   bool _showDeleted = false;
   bool _showArchived = false;
 
+Future<Map<String, dynamic>> getUserData(String userId) async {
+  try {
+    DocumentSnapshot userData = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .get();
+    if (userData.exists) {
+      return userData.data() as Map<String, dynamic>;
+    }
+    return {};
+  } catch (e) {
+    print("Error fetching user data: $e");
+    return {};
+  }
+}
   @override
   Widget build(BuildContext context) {
     User? currentUser = FirebaseAuth.instance.currentUser;
@@ -82,128 +96,188 @@ class _TripsState extends State<Trips> {
           stream: FirebaseFirestore.instance
               .collection('users')
               .doc(currentUser!.uid)
-              .collection('trips')
-              .where('status',
-                  isEqualTo: _showDeleted
-                      ? 0
-                      : _showArchived
-                          ? 2
-                          : _showMyTrips
-                              ? 1
-                              : null) // Pass null if _showMyTrips is false
               .snapshots(),
           builder:
-              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
             if (snapshot.hasError) {
+              print('Error: ${snapshot.error}');
               return Center(
                 child: Text('Error: ${snapshot.error}'),
               );
             }
 
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              print('User document not found.');
               return const Center(
-                child: Text('No trips available.'),
+                child: Text('User document not found.'),
               );
             }
 
-            return ListView(
-              children: snapshot.data!.docs.map((DocumentSnapshot document) {
-                Map<String, dynamic> data =
-                    document.data() as Map<String, dynamic>;
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => TripInfo(
-                          tripData: data,
+            final userData = snapshot.data!.data() as Map<String, dynamic>;
+            final List<DocumentReference> tripRefs =
+                (userData['trips'] as List<dynamic>)
+                        .map((ref) => ref as DocumentReference)
+                        .toList() ??
+                    [];
+
+            if (tripRefs.isEmpty) {
+              return const Center(
+                child: Text('No trips added.'),
+              );
+            }
+
+            return StreamBuilder(
+              stream: FirebaseFirestore.instance
+                  .collection('trips')
+                  .where(FieldPath.documentId,
+                      whereIn: tripRefs.map((ref) => ref.id).toList())
+                  .snapshots(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<QuerySnapshot> tripSnapshot) {
+                if (tripSnapshot.hasError) {
+                  print('Error: ${tripSnapshot.error}');
+                  return Center(
+                    child: Text('Error: ${tripSnapshot.error}'),
+                  );
+                }
+
+                if (!tripSnapshot.hasData || tripSnapshot.data!.docs.isEmpty) {
+                  print('No trips available.');
+                  return const Center(
+                    child: Text('No trips available.'),
+                  );
+                }
+
+                 return ListView.builder(
+                  itemCount: tripSnapshot.data!.docs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    DocumentSnapshot tripDocument = tripSnapshot.data!.docs[index];
+                    Map<String, dynamic> tripData = tripDocument.data() as Map<String, dynamic>;
+
+                    // Fetch user data for the creator of this trip
+                    Future<Map<String, dynamic>> userDataFuture =
+                        getUserData(tripData['created_by'].id);
+
+                    return FutureBuilder(
+                      future: userDataFuture,
+                      builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> userSnapshot) {
+                        if (userSnapshot.connectionState == ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // Show loading indicator while fetching user data
+                        } else if (userSnapshot.hasError) {
+                          return Text('Error fetching user data');
+                        } else {
+                          // Extract user data
+                          Map<String, dynamic> userData = userSnapshot.data!;
+                          String username = userData['username'] ?? 'Unknown User';
+                          String avatarUrl = userData['avatar_url'] ?? '';
+
                           
-                        ),
-                      ),
-                    );
-                  },
-                  child: Slidable(
-                    startActionPane: ActionPane(
-                      motion: const StretchMotion(),
-                      children: [
-                        SlidableAction(
-                          onPressed: (context) {
-                            if (_showDeleted) {
-                              restoreTrip(context, data['trip_name']);
-                            } else if (_showArchived) {
-                              restoreTrip(context, data['trip_name']);
-                            } else if (_showMyTrips) {
-                              archiveTrip(context, data['trip_name']);
-                            }
-                          },
-                          backgroundColor: Colors.blue,
-                          icon: _showMyTrips
-                              ? Icons.archive_outlined
-                              : Icons.restore,
-                        ),
-                      ],
-                    ),
-                    endActionPane: ActionPane(
-                      motion: const StretchMotion(),
-                      children: [
-                        SlidableAction(
-                          onPressed: (context) =>
-                              softDeleteTrip(context, data['trip_name']),
-                          backgroundColor: Colors.red,
-                          icon: Icons.delete_outline,
-                        ),
-                      ],
-                    ),
-                    child: Container(
-                      margin: const EdgeInsets.all(8.0),
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(26.0),
-                          bottomLeft: Radius.circular(26.0),
-                          bottomRight: Radius.circular(26.0),
-                          topRight: Radius.circular(26.0),
-                        ),
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Colors.amber, Colors.orange],
-                        ),
-                      ),
-                      child: ListTile(
-                        title: Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Center(
-                            child: Text(
-                              '${data['trip_name']}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => TripInfo(
+                                tripData: tripData,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Slidable(
+                          startActionPane: ActionPane(
+                            motion: const StretchMotion(),
+                            children: [
+                              SlidableAction(
+                                onPressed: (context) {
+                                  if (_showDeleted) {
+                                    restoreTrip(context, tripData['trip_name']);
+                                  } else if (_showArchived) {
+                                    restoreTrip(context, tripData['trip_name']);
+                                  } else if (_showMyTrips) {
+                                    archiveTrip(context, tripData['trip_name']);
+                                  }
+                                },
+                                backgroundColor: Colors.blue,
+                                icon: _showMyTrips
+                                    ? Icons.archive_outlined
+                                    : Icons.restore,
+                              ),
+                            ],
+                          ),
+                          endActionPane: ActionPane(
+                            motion: const StretchMotion(),
+                            children: [
+                              SlidableAction(
+                                onPressed: (context) => softDeleteTrip(
+                                    context, tripData['trip_name']),
+                                backgroundColor: Colors.red,
+                                icon: Icons.delete_outline,
+                              ),
+                            ],
+                          ),
+                          child: Container(
+                            margin: const EdgeInsets.all(8.0),
+                            decoration: const BoxDecoration(
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(26.0),
+                                bottomLeft: Radius.circular(26.0),
+                                bottomRight: Radius.circular(26.0),
+                                topRight: Radius.circular(26.0),
+                              ),
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Colors.amber, Colors.orange],
+                              ),
+                            ),
+                            child: ListTile(
+                               leading: CircleAvatar(
+                                    backgroundImage: NetworkImage(avatarUrl),
+                                    radius: 20.0 ,
+                                  ),
+                              title: Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Center(
+                                  child: Text(
+                                    '${tripData['trip_name']}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('Created By: $username'),
+                                  const SizedBox(
+                                    height: 4.0,
+                                  ),
+                                  Text(
+                                      'Starting From: ${tripData['starting_from']}'),
+                                  const SizedBox(
+                                    height: 4.0,
+                                  ),
+                                  Text(
+                                      'Destination: ${tripData['destination']}'),
+                                  const SizedBox(
+                                    height: 4.0,
+                                  ),
+                                  Text('Created At: ${tripData['created_at']}'),
+                                  const SizedBox(
+                                    height: 8.0,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('Starting From: ${data['starting_from']}'),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            Text('Destination: ${data['destination']}'),
-                            const SizedBox(
-                              height: 4.0,
-                            ),
-                            Text('Created At: ${data['created_at']}'),
-                            const SizedBox(
-                              height: 8.0,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+                      );
+                       } },
+                  );
+                   } );
+              },
             );
           },
         ),
