@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
 
 class TripInfo extends StatefulWidget {
@@ -14,12 +15,21 @@ class TripInfo extends StatefulWidget {
 class _TripInfoState extends State<TripInfo> {
   late List<dynamic> memberReferences;
   late DocumentReference creatorRef;
+  late String currentUserUid;
 
   @override
   void initState() {
     super.initState();
     memberReferences = widget.tripData['members'];
     creatorRef = widget.tripData['created_by'];
+
+    FirebaseAuth.instance.authStateChanges().listen((User? user) {
+      if (user != null) {
+        setState(() {
+          currentUserUid = user.uid;
+        });
+      }
+    });
   }
 
   @override
@@ -42,7 +52,8 @@ class _TripInfoState extends State<TripInfo> {
             Center(
               child: Text(
                 '${widget.tripData['trip_name']}',
-                style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 12.0),
@@ -85,7 +96,8 @@ class _TripInfoState extends State<TripInfo> {
                 if (!snapshot.hasData) {
                   return const Text('No data found');
                 }
-                final creatorData = snapshot.data!.data() as Map<String, dynamic>;
+                final creatorData =
+                    snapshot.data!.data() as Map<String, dynamic>;
                 final creatorName = creatorData['username'];
                 final creatorAvatarUrl = creatorData['avatar_url'];
 
@@ -117,16 +129,35 @@ class _TripInfoState extends State<TripInfo> {
                         return const Text('No data found');
                       }
 
-                      final userData = snapshot.data!.data() as Map<String, dynamic>;
+                      final userData =
+                          snapshot.data!.data() as Map<String, dynamic>;
                       final userName = userData['username'];
                       final avatarUrl = userData['avatar_url'];
+                      final List<dynamic> trips = userData['trips'];
 
-                      return ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(avatarUrl),
-                        ),
-                        title: Text(userName),
-                      );
+                      if (currentUserUid == null ||
+                          currentUserUid == widget.tripData['created_by'].id) {
+                        
+                        return ListTile(
+                          leading: CircleAvatar(
+                            backgroundImage: NetworkImage(avatarUrl),
+                          ),
+                          title: Text(userName),
+                        );
+                      } else {
+                        
+                        if (memberRef.id == currentUserUid ||
+                            memberRef.id == widget.tripData['created_by'].id) {
+                          return ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(avatarUrl),
+                            ),
+                            title: Text(userName),
+                          );
+                        } else {
+                          return Container();
+                        }
+                      }
                     },
                   );
                 },
@@ -143,9 +174,10 @@ class _TripInfoState extends State<TripInfo> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const ViewBudget(
-                            tripName: '',
-                          )),
+                    builder: (context) => const ViewBudget(
+                      tripName: '',
+                    ),
+                  ),
                 );
               },
               child: Container(
@@ -163,9 +195,10 @@ class _TripInfoState extends State<TripInfo> {
           Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => const ViewBudget(
-                      tripName: '',
-                    )),
+              builder: (context) => const ViewBudget(
+                tripName: '',
+              ),
+            ),
           );
         },
         label: const Text('Start Trip'),

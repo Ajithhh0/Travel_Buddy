@@ -15,21 +15,22 @@ class _TripsState extends State<Trips> {
   bool _showDeleted = false;
   bool _showArchived = false;
 
-Future<Map<String, dynamic>> getUserData(String userId) async {
-  try {
-    DocumentSnapshot userData = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
-    if (userData.exists) {
-      return userData.data() as Map<String, dynamic>;
+  Future<Map<String, dynamic>> getUserData(String userId) async {
+    try {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .get();
+      if (userData.exists) {
+        return userData.data() as Map<String, dynamic>;
+      }
+      return {};
+    } catch (e) {
+      print("Error fetching user data: $e");
+      return {};
     }
-    return {};
-  } catch (e) {
-    print("Error fetching user data: $e");
-    return {};
   }
-}
+
   @override
   Widget build(BuildContext context) {
     User? currentUser = FirebaseAuth.instance.currentUser;
@@ -148,135 +149,144 @@ Future<Map<String, dynamic>> getUserData(String userId) async {
                   );
                 }
 
-                 return ListView.builder(
-                  itemCount: tripSnapshot.data!.docs.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    DocumentSnapshot tripDocument = tripSnapshot.data!.docs[index];
-                    Map<String, dynamic> tripData = tripDocument.data() as Map<String, dynamic>;
+                return ListView.builder(
+                    itemCount: tripSnapshot.data!.docs.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      DocumentSnapshot tripDocument =
+                          tripSnapshot.data!.docs[index];
+                      Map<String, dynamic> tripData =
+                          tripDocument.data() as Map<String, dynamic>;
 
-                    // Fetch user data for the creator of this trip
-                    Future<Map<String, dynamic>> userDataFuture =
-                        getUserData(tripData['created_by'].id);
+                      // Fetch user data for the creator of this trip
+                      Future<Map<String, dynamic>> userDataFuture =
+                          getUserData(tripData['created_by'].id);
 
-                    return FutureBuilder(
-                      future: userDataFuture,
-                      builder: (BuildContext context, AsyncSnapshot<Map<String, dynamic>> userSnapshot) {
-                        if (userSnapshot.connectionState == ConnectionState.waiting) {
-                          return CircularProgressIndicator(); // Show loading indicator while fetching user data
-                        } else if (userSnapshot.hasError) {
-                          return Text('Error fetching user data');
-                        } else {
-                          // Extract user data
-                          Map<String, dynamic> userData = userSnapshot.data!;
-                          String username = userData['username'] ?? 'Unknown User';
-                          String avatarUrl = userData['avatar_url'] ?? '';
+                      return FutureBuilder(
+                        future: userDataFuture,
+                        builder: (BuildContext context,
+                            AsyncSnapshot<Map<String, dynamic>> userSnapshot) {
+                          if (userSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (userSnapshot.hasError) {
+                            return const Text('Error fetching user data');
+                          } else {
+                            // Extract user data
+                            Map<String, dynamic> userData = userSnapshot.data!;
+                            String username =
+                                userData['username'] ?? 'Unknown User';
+                            String avatarUrl = userData['avatar_url'] ?? '';
 
-                          
-                      return GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => TripInfo(
-                                tripData: tripData,
-                              ),
-                            ),
-                          );
-                        },
-                        child: Slidable(
-                          startActionPane: ActionPane(
-                            motion: const StretchMotion(),
-                            children: [
-                              SlidableAction(
-                                onPressed: (context) {
-                                  if (_showDeleted) {
-                                    restoreTrip(context, tripData['trip_name']);
-                                  } else if (_showArchived) {
-                                    restoreTrip(context, tripData['trip_name']);
-                                  } else if (_showMyTrips) {
-                                    archiveTrip(context, tripData['trip_name']);
-                                  }
-                                },
-                                backgroundColor: Colors.blue,
-                                icon: _showMyTrips
-                                    ? Icons.archive_outlined
-                                    : Icons.restore,
-                              ),
-                            ],
-                          ),
-                          endActionPane: ActionPane(
-                            motion: const StretchMotion(),
-                            children: [
-                              SlidableAction(
-                                onPressed: (context) => softDeleteTrip(
-                                    context, tripData['trip_name']),
-                                backgroundColor: Colors.red,
-                                icon: Icons.delete_outline,
-                              ),
-                            ],
-                          ),
-                          child: Container(
-                            margin: const EdgeInsets.all(8.0),
-                            decoration: const BoxDecoration(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(26.0),
-                                bottomLeft: Radius.circular(26.0),
-                                bottomRight: Radius.circular(26.0),
-                                topRight: Radius.circular(26.0),
-                              ),
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [Colors.amber, Colors.orange],
-                              ),
-                            ),
-                            child: ListTile(
-                               leading: CircleAvatar(
-                                    backgroundImage: NetworkImage(avatarUrl),
-                                    radius: 20.0 ,
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => TripInfo(
+                                      tripData: tripData,
+                                    ),
                                   ),
-                              title: Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Center(
-                                  child: Text(
-                                    '${tripData['trip_name']}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 17,
+                                );
+                              },
+                              child: Slidable(
+                                startActionPane: ActionPane(
+                                  motion: const StretchMotion(),
+                                  children: [
+                                    SlidableAction(
+                                      onPressed: (context) {
+                                        if (_showDeleted) {
+                                          restoreTrip(tripDocument.id);
+                                        } else if (_showArchived) {
+                                          restoreTrip(tripDocument.id);
+                                        } else if (_showMyTrips) {
+                                          archiveTrip(tripDocument.id);
+                                        }
+                                      },
+                                      backgroundColor: Colors.blue,
+                                      icon: _showMyTrips
+                                          ? Icons.archive_outlined
+                                          : Icons.restore,
+                                    ),
+                                  ],
+                                ),
+                                endActionPane: ActionPane(
+                                  motion: const StretchMotion(),
+                                  children: [
+                                    SlidableAction(
+                                      onPressed: (context) => {
+                                        softDeleteTrip(tripDocument.id)
+                                      },
+                                      backgroundColor: Colors.red,
+                                      icon: Icons.delete_outline,
+                                    ),
+                                  ],
+                                ),
+                                child: Container(
+                                  margin: const EdgeInsets.all(8.0),
+                                  decoration: const BoxDecoration(
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(26.0),
+                                      bottomLeft: Radius.circular(26.0),
+                                      bottomRight: Radius.circular(26.0),
+                                      topRight: Radius.circular(26.0),
+                                    ),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [Colors.amber, Colors.orange],
+                                    ),
+                                  ),
+                                  child: ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundImage: NetworkImage(avatarUrl),
+                                      radius: 20.0,
+                                    ),
+                                    title: Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 8.0),
+                                      child: Center(
+                                        child: Text(
+                                          '${tripData['trip_name']}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 17,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text('Created By: $username'),
+                                        const SizedBox(
+                                          height: 4.0,
+                                        ),
+                                        Text(
+                                            'Starting From: ${tripData['starting_from']}'),
+                                        const SizedBox(
+                                          height: 4.0,
+                                        ),
+                                        Text(
+                                            'Destination: ${tripData['destination']}'),
+                                        const SizedBox(
+                                          height: 4.0,
+                                        ),
+                                        Text(
+                                            'Created At: ${tripData['created_at']}'),
+                                        const SizedBox(
+                                          height: 8.0,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('Created By: $username'),
-                                  const SizedBox(
-                                    height: 4.0,
-                                  ),
-                                  Text(
-                                      'Starting From: ${tripData['starting_from']}'),
-                                  const SizedBox(
-                                    height: 4.0,
-                                  ),
-                                  Text(
-                                      'Destination: ${tripData['destination']}'),
-                                  const SizedBox(
-                                    height: 4.0,
-                                  ),
-                                  Text('Created At: ${tripData['created_at']}'),
-                                  const SizedBox(
-                                    height: 8.0,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
+                            );
+                          }
+                        },
                       );
-                       } },
-                  );
-                   } );
+                    });
               },
             );
           },
@@ -285,82 +295,22 @@ Future<Map<String, dynamic>> getUserData(String userId) async {
     );
   }
 
-  Future<void> softDeleteTrip(BuildContext context, String tripName) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final userDocRef =
-          FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-      final tripDocRef = userDocRef.collection('trips').doc(tripName);
-
-      try {
-        await tripDocRef.update({
-          'status': 0,
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Trip "$tripName" deleted successfully.'),
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to soft delete trip: $e'),
-          ),
-        );
-      }
-    }
+  Future<void> archiveTrip(String tripId) async {
+    await FirebaseFirestore.instance.collection('trips').doc(tripId).update({
+      'status': 2, // Archived
+    });
   }
 
-  Future<void> restoreTrip(BuildContext context, String tripName) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final userDocRef =
-          FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-      final tripDocRef = userDocRef.collection('trips').doc(tripName);
-
-      try {
-        await tripDocRef.update({
-          'status': 1,
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Trip "$tripName" restored successfully.'),
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to restore trip: $e'),
-          ),
-        );
-      }
-    }
+  Future<void> softDeleteTrip(String tripId) async {
+    await FirebaseFirestore.instance.collection('trips').doc(tripId).update({
+      'status': 0, // Soft Deleted
+    });
   }
 
-  Future<void> archiveTrip(BuildContext context, String tripName) async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final userDocRef =
-          FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-      final tripDocRef = userDocRef.collection('trips').doc(tripName);
-
-      try {
-        await tripDocRef.update({
-          'status': 2,
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Trip "$tripName" archived successfully.'),
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to archive trip: $e'),
-          ),
-        );
-      }
-    }
+  Future<void> restoreTrip(String tripId) async {
+    await FirebaseFirestore.instance.collection('trips').doc(tripId).update({
+      'status': 1, // Restored
+    });
   }
 
   Future<void> _refreshData() async {
