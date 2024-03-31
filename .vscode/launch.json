@@ -19,30 +19,25 @@
         },
 
         {
-            "name" : "Android-1" ,
+            "name" : "aith_phone" ,
             "request" : "launch",
             "type" : "dart",
             "deviceId" : "emulator-5554"
         },
         {
-            "name" : "Android-2" ,
+            "name" : "2nd_phone" ,
             "request" : "launch",
             "type" : "dart",
             "deviceId" : "emulator-5556"
         },
-        {
-            "name" : "Chrome" ,
-            "request" : "launch",
-            "type" : "dart",
-            "deviceId" : "chrome"
-        }
+
     ],
     "compounds" : [
 
         {
             "name" : "All Devices", 
             "configurations" : [
-                "Android-1","Android-2",]
+                "aith_phone","2nd_phone",]
         }
     ]
 }

@@ -1,27 +1,30 @@
-import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:travel_buddy/misc/shimmer_widget.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
 
 class TripInfo extends StatefulWidget {
-  final Map<String, dynamic> tripData;
+  final String tripId;
 
-  const TripInfo({Key? key, required this.tripData}) : super(key: key);
+  const TripInfo({
+    Key? key,
+    required this.tripId,
+  }) : super(key: key);
 
   @override
   _TripInfoState createState() => _TripInfoState();
 }
 
 class _TripInfoState extends State<TripInfo> {
-  late List<dynamic> memberReferences;
+  DocumentSnapshot? tripSnapshot;
   late DocumentReference creatorRef;
   late String currentUserUid;
 
   @override
   void initState() {
     super.initState();
-    memberReferences = widget.tripData['members'];
-    creatorRef = widget.tripData['created_by'];
 
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       if (user != null) {
@@ -30,10 +33,78 @@ class _TripInfoState extends State<TripInfo> {
         });
       }
     });
+
+    _fetchTripData();
+  }
+
+  Future<void> _fetchTripData() async {
+    try {
+      FirebaseFirestore.instance
+          .collection('trips')
+          .doc(widget.tripId)
+          .snapshots()
+          .listen((DocumentSnapshot snapshot) {
+        setState(() {
+          tripSnapshot = snapshot;
+          creatorRef = tripSnapshot?['created_by'] as DocumentReference;
+        });
+      });
+    } catch (e) {
+      print('Error fetching trip data: $e');
+    }
+  }
+
+  Widget _buildMemberTile(String memberUid) {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(memberUid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _memberShimmer();
+        }
+        if (snapshot.hasError) {
+          return Text('Error: ${snapshot.error}');
+        }
+        if (!snapshot.hasData) {
+          return const Text('No data found');
+        }
+
+        final userData = snapshot.data!.data() as Map<String, dynamic>;
+        final String userName = userData['username'] as String;
+        final String avatarUrl = userData['avatar_url'] as String;
+
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: NetworkImage(avatarUrl),
+          ),
+          title: Text(userName),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    if (tripSnapshot == null) {
+      // Return a loading indicator while fetching trip data
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Trip Details'),
+          centerTitle: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+          ),
+          backgroundColor: Colors.blue,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    // Build the UI with fetched trip data
     return Scaffold(
       appBar: AppBar(
         title: const Text('Trip Details'),
@@ -51,7 +122,7 @@ class _TripInfoState extends State<TripInfo> {
             // Trip details
             Center(
               child: Text(
-                '${widget.tripData['trip_name']}',
+                '${tripSnapshot?['trip_name']}',
                 style:
                     const TextStyle(fontSize: 23, fontWeight: FontWeight.bold),
               ),
@@ -69,11 +140,11 @@ class _TripInfoState extends State<TripInfo> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Starting From: ${widget.tripData['starting_from']}'),
+                    Text('Starting From: ${tripSnapshot?['starting_from']}'),
                     const SizedBox(height: 8.0),
-                    Text('Destination: ${widget.tripData['destination']}'),
+                    Text('Destination: ${tripSnapshot?['destination']}'),
                     const SizedBox(height: 8.0),
-                    Text('Created At: ${widget.tripData['created_at']}'),
+                    Text('Created At: ${tripSnapshot?['created_at']}'),
                   ],
                 ),
               ),
@@ -88,7 +159,7 @@ class _TripInfoState extends State<TripInfo> {
               future: creatorRef.get(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
+                  return _memberShimmer();
                 }
                 if (snapshot.hasError) {
                   return Text('Error: ${snapshot.error}');
@@ -112,54 +183,33 @@ class _TripInfoState extends State<TripInfo> {
             ),
             Expanded(
               child: ListView.builder(
-                itemCount: memberReferences.length,
+                itemCount: tripSnapshot?['members'].length,
                 itemBuilder: (context, index) {
-                  final DocumentReference memberRef = memberReferences[index];
+                  final Map<String, dynamic> memberData =
+                      tripSnapshot?['members'][index] as Map<String, dynamic>;
+                  final String memberUid = memberData['memberUid'] as String;
+                  final int acceptanceStatus =
+                      memberData['acceptance_status'] as int;
 
-                  return FutureBuilder<DocumentSnapshot>(
-                    future: memberRef.get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-                      if (!snapshot.hasData) {
-                        return const Text('No data found');
-                      }
+                  // Check if the current user is the admin
+                  if (currentUserUid == creatorRef.id) {
+                    // Admin sees all members
+                    return _buildMemberTile(memberUid);
+                  }
 
-                      final userData =
-                          snapshot.data!.data() as Map<String, dynamic>;
-                      final userName = userData['username'];
-                      final avatarUrl = userData['avatar_url'];
-                      final List<dynamic> trips = userData['trips'];
+                  // Check if the current user is a member and has acceptance status 2
+                  if (currentUserUid == memberUid && acceptanceStatus == 2) {
+                    // Show the current user with acceptance status 2
+                    return _buildMemberTile(memberUid);
+                  }
 
-                      if (currentUserUid == null ||
-                          currentUserUid == widget.tripData['created_by'].id) {
-                        
-                        return ListTile(
-                          leading: CircleAvatar(
-                            backgroundImage: NetworkImage(avatarUrl),
-                          ),
-                          title: Text(userName),
-                        );
-                      } else {
-                        
-                        if (memberRef.id == currentUserUid ||
-                            memberRef.id == widget.tripData['created_by'].id) {
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundImage: NetworkImage(avatarUrl),
-                            ),
-                            title: Text(userName),
-                          );
-                        } else {
-                          return Container();
-                        }
-                      }
-                    },
-                  );
+                  // Show other members with acceptance status 2
+                  if (acceptanceStatus == 2) {
+                    return _buildMemberTile(memberUid);
+                  }
+
+                  // If conditions don't match, return an empty container
+                  return Container();
                 },
               ),
             ),
@@ -206,4 +256,15 @@ class _TripInfoState extends State<TripInfo> {
       ),
     );
   }
+
+  Widget _memberShimmer() => ListTile(
+    leading: ShimmerWidget.circular(height: 64, width: 64,),
+    title: Align(
+      alignment: Alignment.centerLeft,
+      child: ShimmerWidget.rectangular(
+        width: MediaQuery.of(context).size.width * 0.3 ,
+        height: 16),
+    ),
+    subtitle: ShimmerWidget.rectangular(height: 10),
+  );
 }

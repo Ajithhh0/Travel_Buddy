@@ -53,94 +53,93 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
   }
 
   Future<void> saveToDatabase() async {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      final tripDetailsDocumentRef =
-          FirebaseFirestore.instance.collection('trips').doc();
+  final currentUser = FirebaseAuth.instance.currentUser;
+  if (currentUser != null) {
+    final tripDetailsDocumentRef =
+        FirebaseFirestore.instance.collection('trips').doc();
 
-      final String tripId = tripDetailsDocumentRef.id;
+    final String tripId = tripDetailsDocumentRef.id;
 
-      final List<DocumentReference> memberRefs = savedMembers
-          .map((member) =>
-              FirebaseFirestore.instance.collection('users').doc(member.uid))
-          .toList();
-
-      // Update the MemberRefsProvider with the new memberRefs
-      Provider.of<MemberRefsProvider>(context, listen: false)
-          .updateMemberRefs(memberRefs);
-
-      final formattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
-
-      var data = {
-        'trip_name': widget.tripName,
-        'created_by': FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser.uid), // User Reference
-        'starting_from': startLocation,
-        'destination': destinationLocation,
-        'members': memberRefs,
-        'created_at': formattedDate,
-        'status': 1,
-      };
-
-      await tripDetailsDocumentRef.set(data);
-
-      print("Trip ID: $tripId");
-
-      // Update the user's document to include a reference to the newly created trip
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({
-        'trips': FieldValue.arrayUnion([
-          {
-            //req_status 2 and primary 1 by default while creating
-            'tripId': tripId,
-            'req_status': 2, // 0 - deleted , 1 - pending , 2 - accepted
-            'primary': 1, //0 - member , 1 - trip admin
-          }
-        ])
-        // FieldValue.arrayUnion([FirebaseFirestore.instance.collection('trips').doc(tripId)])
-      });
-
-      for (final member in savedMembers) {
-        await sendTripRequest(
-            currentUser.uid, member.uid, formattedDate, tripId);
-      }
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Your trip has been created.'),
-        ),
-      );
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    }
-  }
-
-  Future<void> sendTripRequest(String senderUid, String recipientUid,
-      String formattedDate, String tripId) async {
     final List<DocumentReference> memberRefs = savedMembers
         .map((member) =>
             FirebaseFirestore.instance.collection('users').doc(member.uid))
         .toList();
 
-    // Update recipient's user document with trip data
+    // Update the MemberRefsProvider with the new memberRefs
+    Provider.of<MemberRefsProvider>(context, listen: false)
+        .updateMemberRefs(memberRefs);
+
+    final formattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
+
+    // Build members list with req_status
+    List<Map<String, dynamic>> membersData = savedMembers.map((member) {
+      return {
+        'memberUid': member.uid,
+        'acceptance_status': 1,
+      };
+    }).toList();
+
+    var data = {
+      'trip_name': widget.tripName,
+      'created_by': FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid), // User Reference
+      'starting_from': startLocation,
+      'destination': destinationLocation,
+      'members': membersData, // Update members with additional data
+      'created_at': formattedDate,
+      'status': 1,
+    };
+
+    await tripDetailsDocumentRef.set(data);
+
+    print("Trip ID: $tripId");
+
+    // Update the user's document to include a reference to the newly created trip
     await FirebaseFirestore.instance
         .collection('users')
-        .doc(recipientUid)
+        .doc(currentUser.uid)
         .update({
-      'trips': FieldValue.arrayUnion([
-        {
-          'tripId': tripId,
-          'req_status': 1, // 0 - deleted , 1 - pending , 2 - accepted
-          'primary': 0, // 0 - member , 1 - trip admin
-        }
-      ])
+      'trips': FieldValue.arrayUnion(
+          [FirebaseFirestore.instance.collection('trips').doc(tripId)])
     });
+
+    for (final member in savedMembers) {
+      await sendTripRequest(
+          currentUser.uid, member.uid, formattedDate, tripId);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Your trip has been created.'),
+      ),
+    );
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  }
+}
+
+  Future<void> sendTripRequest(String senderUid, String recipientUid,
+      String formattedDate, String tripId) async {
+    final DocumentReference tripRef =
+        FirebaseFirestore.instance.collection('trips').doc(tripId);
+
+    // Update recipient's user document with trip data
+    await FirebaseFirestore.instance
+          .collection('users')
+          .doc(recipientUid)
+          .update({
+        
+        'requests': FieldValue.arrayUnion([
+          {
+            'trip': tripId,
+            'req_status': 1,
+          }
+        ])
+      });
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

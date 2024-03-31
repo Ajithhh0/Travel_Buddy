@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
-import 'display_details.dart';
+import 'confirm_details.dart';
 
 class BudgetPlanner extends StatefulWidget {
   final String? tripName;

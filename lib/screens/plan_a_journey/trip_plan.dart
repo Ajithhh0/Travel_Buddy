@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:travel_buddy/screens/plan_a_journey/display_details.dart';
+import 'package:travel_buddy/screens/plan_a_journey/confirm_details.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
 
 class TripPlanning extends StatefulWidget {

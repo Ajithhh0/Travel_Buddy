@@ -1,8 +1,29 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class TripRequestsScreen extends StatelessWidget {
+class TripRequestsScreen extends StatefulWidget {
+  @override
+  _TripRequestsScreenState createState() => _TripRequestsScreenState();
+}
+
+class _TripRequestsScreenState extends State<TripRequestsScreen> {
+  late StreamController<bool> _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = StreamController<bool>();
+  }
+
+  @override
+  void dispose() {
+    _controller.close();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
@@ -15,10 +36,10 @@ class TripRequestsScreen extends StatelessWidget {
       );
     }
     return Scaffold(
-      body: StreamBuilder<QuerySnapshot>(
+      body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('trip_requests_pending')
-            .where('recipient_uid', isEqualTo: currentUserUid)
+            .collection('users')
+            .doc(currentUserUid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -29,81 +50,80 @@ class TripRequestsScreen extends StatelessWidget {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
 
-          final data = snapshot.data!.docs;
+          final userData = snapshot.data!.data() as Map<String, dynamic>;
+          final List<dynamic> requestsData = userData['requests'] ?? [];
 
-          
-    // Check if there are no pending trip requests
-    final hasPendingRequests = data.any((tripRequest) {
-      final acceptanceStatus = tripRequest['acceptance_status'];
-      return acceptanceStatus == 1;
-    });
+          // Filter requests with req_status 1 (pending)
+          final List<dynamic> pendingRequests = requestsData
+              .where((request) => request['req_status'] == 1)
+              .toList();
 
-    if (!hasPendingRequests) {
-      return Center(
-        child: Text('No pending trip requests'),
-      );
-    }
+          if (pendingRequests.isEmpty) {
+            _controller.add(false);
+            return const Center(
+              child: Text('No trip requests'),
+            );
+          }
 
           return ListView.builder(
-            itemCount: data.length,
+            itemCount: pendingRequests.length,
             itemBuilder: (context, index) {
-              final tripRequest = data[index].data() as Map<String, dynamic>;
-              final tripName = tripRequest['trip_name'];
-              final formattedDate = tripRequest['created_at'];
-              final startLocation = tripRequest['starting_from'];
-              final destination = tripRequest['destination'];
-              final acceptanceStatus = tripRequest['acceptance_status'];
+              final request = pendingRequests[index];
+              final tripId = request['trip'];
 
-              if (acceptanceStatus != 1) {
-                // Return an empty container to exclude the trip request from UI
-                return Container();
-                
-              }
+              return FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('trips')
+                    .doc(tripId)
+                    .get(),
+                builder: (context, tripSnapshot) {
+                  if (tripSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-              // Check if the acceptance_status is 2 and save trip details under the recipient's UID
-              // Inside your StreamBuilder where you check the acceptanceStatus
-              if (acceptanceStatus == 2) {
-                // Assuming tripId is available in your data model
-                final tripId = tripRequest[
-                    'trip_id']; // Make sure this field exists in your data model
-                final recipientUid = tripRequest['recipient_uid'];
+                  if (tripSnapshot.hasError) {
+                    return Center(child: Text('Error: ${tripSnapshot.error}'));
+                  }
 
-                // Call the function to save trip details under the recipient's UID
-                _saveTripDetailsUnderRecipient(tripId, recipientUid, context);
+                  final tripData =
+                      tripSnapshot.data!.data() as Map<String, dynamic>;
+                  final tripName = tripData['trip_name'];
+                  final formattedDate = tripData['created_at'];
+                  final startLocation = tripData['starting_from'];
+                  final destination = tripData['destination'];
 
-                // Optionally, you can remove the trip request from the UI by not returning a Card
-                // return SizedBox(); // Uncomment this line if you want to exclude the card from the UI
-              }
-
-              return Card(
-                child: ListTile(
-                  title: Text(tripName ?? ''),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Date: ${formattedDate ?? ''}'),
-                      Text('From: ${startLocation ?? ''}'),
-                      Text('To: ${destination ?? ''}'),
-                    ],
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.check),
-                        onPressed: () {
-                          _updateAcceptanceStatus(data[index].id, 2, context);
-                        },
+                  return Card(
+                    child: ListTile(
+                      title: Text(tripName ?? ''),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Date: ${formattedDate ?? ''}'),
+                          Text('From: ${startLocation ?? ''}'),
+                          Text('To: ${destination ?? ''}'),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(Icons.clear),
-                        onPressed: () {
-                          _updateAcceptanceStatus(data[index].id, 0, context);
-                        },
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.check),
+                            onPressed: () {
+                              acceptTripRequest(tripId);
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              rejectTripRequest(tripId);
+                            
+                            },
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               );
             },
           );
@@ -112,74 +132,94 @@ class TripRequestsScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _updateAcceptanceStatus(
-    String documentId, int newStatus, BuildContext context) async {
-  try {
-    // Reference to the current user's trip request document
-    final docRef = FirebaseFirestore.instance
-        .collection('trip_requests_pending')
-        .doc(documentId);
+  Future<void> acceptTripRequest(String tripId) async {
+    // Fetch the current requests array
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+    List<dynamic> requests = userDoc.get('requests') ?? [];
 
-    if (newStatus == 0) {
-      
-      await docRef.update({'acceptance_status': newStatus});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Trip request rejected and removed.'),
-        ),
-      );
-    } else if (newStatus == 2) {
-      // If the new status is 2, update the document with the new status
-      await docRef.update({'acceptance_status': newStatus});
-      
-      // Call the function to save trip details under the recipient's UID
-      final tripRequest = await docRef.get();
-      final tripData = tripRequest.data() as Map<String, dynamic>;
-      final tripId = tripData['trip_id'];
-      final recipientUid = tripData['recipient_uid'];
-      await _saveTripDetailsUnderRecipient(tripId, recipientUid, context);
+    // Remove the old request with req_status 1 and add the updated request with req_status 2
+    requests.removeWhere(
+        (request) => request['trip'] == tripId && request['req_status'] == 1);
+    requests.add({
+      'trip': tripId,
+      'req_status': 2,
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Trip request accepted.'),
-        ),
-      );
-      
-    } else {
-      // Handle other status updates if needed
-      await docRef.update({'acceptance_status': newStatus});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Trip request status updated to: $newStatus'),
-        ),
-      );
-    }
-  } catch (error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to update trip request status: $error'),
-      ),
-    );
+    // Update the user's document with the modified requests array
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .update({'requests': requests});
+
+    // Fetch the current members array
+    DocumentSnapshot tripDoc =
+        await FirebaseFirestore.instance.collection('trips').doc(tripId).get();
+    List<dynamic> members = tripDoc.get('members') ?? [];
+
+    // Update acceptance_status to 2 (accepted) for the current user
+    members.forEach((member) {
+      if (member['memberUid'] == FirebaseAuth.instance.currentUser!.uid) {
+        member['acceptance_status'] = 2;
+      }
+    });
+
+    // Update the trip's document with the modified members array
+    await FirebaseFirestore.instance
+        .collection('trips')
+        .doc(tripId)
+        .update({'members': members});
+
+    // Add the trip reference to the user's trips field
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .update({
+      'trips': FieldValue.arrayUnion(
+          [FirebaseFirestore.instance.collection('trips').doc(tripId)])
+    });
   }
-}
 
-  Future<void> _saveTripDetailsUnderRecipient(
-      String tripId, String recipientUid, BuildContext context) async {
-    try {
-      final tripRef =
-          FirebaseFirestore.instance.collection('trips').doc(tripId);
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(recipientUid)
-          .update({
-        'trips': FieldValue.arrayUnion([tripRef])
-      });
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to save trip details: $error'),
-        ),
-      );
-    }
+  Future<void> rejectTripRequest(String tripId) async {
+    // Fetch the current requests array
+    DocumentSnapshot userDoc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .get();
+    List<dynamic> requests = userDoc.get('requests') ?? [];
+
+    // Remove the old request with req_status 1 and add the updated request with req_status 0
+    requests.removeWhere(
+        (request) => request['trip'] == tripId && request['req_status'] == 1);
+    requests.add({
+      'trip': tripId,
+      'req_status': 0,
+    });
+
+    // Update the user's document with the modified requests array
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .update({'requests': requests});
+
+    // Fetch the current members array
+    DocumentSnapshot tripDoc =
+        await FirebaseFirestore.instance.collection('trips').doc(tripId).get();
+    List<dynamic> members = tripDoc.get('members') ?? [];
+
+    // Update acceptance_status to 0 (rejected) for the current user
+    members.forEach((member) {
+      if (member['memberUid'] == FirebaseAuth.instance.currentUser!.uid) {
+        member['acceptance_status'] = 0;
+      }
+    });
+
+    // Update the trip's document with the modified members array
+    await FirebaseFirestore.instance
+        .collection('trips')
+        .doc(tripId)
+        .update({'members': members});
   }
 }

@@ -68,6 +68,7 @@ dependencies:
   cloud_firestore: ^4.14.0
   firebase_storage: ^11.6.0
   flutter_slidable: ^3.0.1
+  shimmer: ^3.0.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
