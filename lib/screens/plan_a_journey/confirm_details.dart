@@ -209,7 +209,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
             ),
             const SizedBox(height: 10),
             Card(
-              color: const Color.fromARGB(255, 151, 196, 232),
+              color:  Colors.blue,
               child: ListView.builder(
                 shrinkWrap: true,
                 itemCount: savedMembers.length,
@@ -233,7 +233,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
           topRight: Radius.circular(20),
         ),
         child: BottomAppBar(
-          color: const Color.fromARGB(255, 151, 196, 232),
+          color:  Colors.blue,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(

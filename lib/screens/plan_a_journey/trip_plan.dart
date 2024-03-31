@@ -84,7 +84,7 @@ class _TripPlanningState extends State<TripPlanning> {
             ),
             if (members.isNotEmpty)
               Card(
-                color: const Color.fromARGB(255, 151, 196, 232),
+                color:  Colors.blue,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

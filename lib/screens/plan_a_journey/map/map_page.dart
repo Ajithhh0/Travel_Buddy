@@ -293,6 +293,11 @@ class _MapScreenState extends State<MapScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Plan Your Journey'),
+        centerTitle: true,
+         shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+        backgroundColor: Colors.blue,
         actions: [
           if (tripDirectionDetailsInfo != null)
             IconButton(
