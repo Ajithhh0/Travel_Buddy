@@ -2,8 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:line_icons/line_icons.dart';
+import 'package:travel_buddy/misc_widgets/drawer.dart';
 
-// Assuming the paths to your screens are correct
 import 'package:travel_buddy/reg/log1.dart';
 import 'package:travel_buddy/screens/chat/chats.dart';
 import 'package:travel_buddy/screens/home.dart';
@@ -51,7 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: Colors.blue,
         shadowColor: Colors.yellow,
-        automaticallyImplyLeading: false,
+       
         title: Text(_titles[_selectedIndex]),
         centerTitle: true,
         actions: [
@@ -67,6 +67,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      drawer: MyDrawer(),
+      
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,

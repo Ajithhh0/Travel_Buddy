@@ -65,7 +65,7 @@ dependencies:
   supabase: ^2.0.8
   google_fonts: ^6.1.0
   form_validator: ^2.1.1
-  cloud_firestore: ^4.14.0
+  cloud_firestore: ^4.15.10
   firebase_storage: ^11.6.0
   flutter_slidable: ^3.0.1
   shimmer: ^3.0.0
@@ -97,6 +97,9 @@ flutter:
     - assets/images/jeep00.jpg
     - assets/images/jeepii.jpg
     - assets/images/jeep00.png
+    - assets/images/jeep_ai_no_bg.png
+    - assets/images/lc.png
+    - assets/icons/
 
     
   # The following line ensures that the Material Icons font is

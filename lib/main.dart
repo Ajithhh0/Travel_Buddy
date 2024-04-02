@@ -50,22 +50,26 @@ class MyApp extends StatelessWidget {
  @override
  Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => AppInfo(), 
+      create: (context) => AppInfo(),
       child: GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Travel Buddy',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.amber),
-          primaryColor: Colors.amber,
+          appBarTheme: AppBarTheme(),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey[400]!,
+          primary:Colors.black ,
+          secondary: Colors.white38,
+          background: Colors.white),
+          primaryColor: Colors.grey[300]!,
           useMaterial3: true,
           textTheme: GoogleFonts.poppinsTextTheme(),
         ),
         home: AnimatedSplashScreen(
-          splash: Image.asset('assets/images/jeep.png'),
+          splash: Image.asset('assets/images/jeep_ai_no_bg.png'),
           splashIconSize: double.infinity,
           duration: 3000,
           splashTransition: SplashTransition.fadeTransition,
-          backgroundColor: Colors.amber,
+          backgroundColor: Colors.grey[200]!,
           nextScreen: FirebaseAuth.instance.currentUser == null
               ? const LoginPage()
               : const HomeScreen(),

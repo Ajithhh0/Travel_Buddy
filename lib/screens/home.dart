@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+
+import 'package:travel_buddy/screens/Packages_&_Offers/Hotels.dart';
 //import 'package:travel_buddy/altmap/screens/mapScreen.dart';
 import 'package:travel_buddy/screens/plan_a_journey/map/map_page.dart';
-
 
 //import 'package:travel_buddy/screens/plan_a_journey/planning.dart';
 
@@ -9,27 +10,40 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(backgroundColor: Colors.amber,
+      appBar: AppBar(
+        backgroundColor: Colors.amber,
         shadowColor: Colors.yellow,
         elevation: 20,
         flexibleSpace: ClipRRect(
-          borderRadius: const BorderRadius.only(bottomLeft: Radius.circular(900),bottomRight: Radius.circular(00),),
-          child: Container(decoration: const BoxDecoration(image: DecorationImage(image: AssetImage("assets/images/jeep00.jpg"),
-          fit: BoxFit.fill,
-          alignment: Alignment.center ),) ,),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(900),
+            bottomRight: Radius.circular(00),
+          ),
+          child: Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                  image: AssetImage("assets/images/jeep00.jpg"),
+                  fit: BoxFit.fill,
+                  alignment: Alignment.center),
+            ),
+          ),
         ),
         shape: const RoundedRectangleBorder(
-          
           // side: BorderSide(
           //   width: 10,
           //   color: Colors.amber,
           //   ),
-            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(800),bottomRight: Radius.circular(000),),
-            
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(800),
+            bottomRight: Radius.circular(000),
+          ),
         ),
-        bottom: const PreferredSize(preferredSize: Size.fromHeight(170),
-        child: SizedBox(),),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(170),
+          child: SizedBox(),
         ),
+      ),
+      
       body: GridView.count(
         crossAxisCount: 2,
         mainAxisSpacing: 20.0,
@@ -41,18 +55,16 @@ class Home extends StatelessWidget {
             width: 100,
             child: ElevatedButton(
               onPressed: () {
-               Navigator.push(
-            context,
-          
-          MaterialPageRoute(builder: (context) => MapScreen()),
-          
-        );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MapScreen()),
+                );
               },
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(15.0),
-                ), backgroundColor: Colors.amber,
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                backgroundColor: Colors.amber,
               ),
               child: const Text(
                 'Plan a Journey',
@@ -68,7 +80,8 @@ class Home extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
-                ), backgroundColor: Colors.amber,
+                ),
+                backgroundColor: Colors.amber,
               ),
               child: const Text(
                 'Join a Trip',
@@ -80,11 +93,15 @@ class Home extends StatelessWidget {
             height: 100,
             width: 100,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) =>  HotelOffers()));
+              },
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
-                ), backgroundColor: Colors.amber,
+                ),
+                backgroundColor: Colors.amber,
               ),
               child: const Text(
                 'Packages and Offers',
@@ -100,7 +117,8 @@ class Home extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15.0),
-                ), backgroundColor: Colors.amber,
+                ),
+                backgroundColor: Colors.amber,
               ),
               child: const Text(
                 'Accounts',
@@ -108,7 +126,6 @@ class Home extends StatelessWidget {
               ),
             ),
           ),
-         
         ],
       ),
     );
