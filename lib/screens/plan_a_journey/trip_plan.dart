@@ -37,7 +37,7 @@ class _TripPlanningState extends State<TripPlanning> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor:  Colors.blue,
+        backgroundColor:  Colors.grey,
         elevation: 20,
         flexibleSpace: const ClipRRect(
           borderRadius: BorderRadius.only(
@@ -84,7 +84,7 @@ class _TripPlanningState extends State<TripPlanning> {
             ),
             if (members.isNotEmpty)
               Card(
-                color:  Colors.blue,
+                color:  Colors.black,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -93,7 +93,7 @@ class _TripPlanningState extends State<TripPlanning> {
                       child: Text(
                         'Members:',
                         style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -106,9 +106,9 @@ class _TripPlanningState extends State<TripPlanning> {
                         return ListTile(
                           leading: CircleAvatar(
                             backgroundImage:
-                                NetworkImage(member['avatar_url'] ?? ''),
+                                NetworkImage(member['avatar_url'] ?? '',),
                           ),
-                          title: Text(member['username'] ?? ''),
+                          title: Text(member['username'] ?? '',  style: TextStyle(color: Colors.white)),
                           trailing: IconButton(
                             icon: const Icon(Icons.remove),
                             onPressed: () {
@@ -200,6 +200,7 @@ class _TripPlanningState extends State<TripPlanning> {
       ),
      floatingActionButton: members.isNotEmpty
     ? FloatingActionButton(
+      backgroundColor: Colors.black,
         onPressed: () {
           if (members.isNotEmpty) {
             Navigator.push(
@@ -215,7 +216,7 @@ class _TripPlanningState extends State<TripPlanning> {
             );
           }
         },
-        child: const Icon(Icons.arrow_forward),
+        child: const Icon(Icons.arrow_forward, color: Colors.white,),
       )
     : null,
 

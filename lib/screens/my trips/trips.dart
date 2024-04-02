@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:travel_buddy/misc/shimmer_widget.dart';
 import 'package:travel_buddy/screens/my%20trips/trip_info.dart';
-import 'package:travel_buddy/screens/plan_a_journey/models/trip_model.dart';
+
 
 class Trips extends StatefulWidget {
   @override
@@ -231,7 +231,7 @@ class _TripsState extends State<Trips> {
                                     gradient: LinearGradient(
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
-                                      colors: [Colors.amber, Colors.orange],
+                                      colors: [Colors.black, Colors.black],
                                     ),
                                   ),
                                   child: ListTile(
@@ -248,6 +248,7 @@ class _TripsState extends State<Trips> {
                                           style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 17,
+                                            color: Colors.white,
                                           ),
                                         ),
                                       ),
@@ -256,22 +257,22 @@ class _TripsState extends State<Trips> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text('Created By: $username'),
+                                        Text('Created By: $username', style: TextStyle(color: Colors.white),),
                                         const SizedBox(
                                           height: 4.0,
                                         ),
                                         Text(
-                                            'Starting From: ${tripDocument['starting_from']}'),
+                                            'Starting From: ${tripDocument['starting_from']}', style: TextStyle(color: Colors.white)),
                                         const SizedBox(
                                           height: 4.0,
                                         ),
                                         Text(
-                                            'Destination: ${tripDocument['destination']}'),
+                                            'Destination: ${tripDocument['destination']}', style: TextStyle(color: Colors.white)),
                                         const SizedBox(
                                           height: 4.0,
                                         ),
                                         Text(
-                                            'Created At: ${tripDocument['created_at']}'),
+                                            'Created At: ${tripDocument['created_at']}', style: TextStyle(color: Colors.white)),
                                         const SizedBox(
                                           height: 8.0,
                                         ),

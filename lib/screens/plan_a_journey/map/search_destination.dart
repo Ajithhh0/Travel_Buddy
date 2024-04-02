@@ -152,14 +152,15 @@ class _SearchDestinationPageState extends State<SearchDestinationPage> {
         child: Column(
           children: [
             Card(
+              
               elevation: 10,
               child: Container(
-                height: 230,
+                height: 235,
                 decoration: const BoxDecoration(
-                  color: Colors.white,
+                  color: Colors.grey,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: Colors.grey,
                       blurRadius: 5.0,
                       spreadRadius: 0.5,
                       offset: Offset(0.7, 0.7),

@@ -23,13 +23,13 @@ class ChatService {
   Future<void> sendMessages(String receiverID, message) async {
     //current user info
     final String currentUID = _auth.currentUser!.uid;
-    final String currentUserName = _auth.currentUser!.displayName!;
+    final String currentUserEmail = _auth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
     //create a new message
     Message newMessage = Message(
       senderID: currentUID,
-      senderUsername: currentUserName,
+      senderUserEmail: currentUserEmail,
       receiverID: receiverID,
       message: message,
       timestamp: timestamp,
@@ -42,7 +42,7 @@ class ChatService {
 
     //add new msgs to db
     await _firestore
-        .collection('chat rooms')
+        .collection('chat_rooms')
         .doc(chatRoomId)
         .collection('messages')
         .add(newMessage.toMap());
@@ -54,12 +54,16 @@ class ChatService {
     List<String> ids = [userID, otherUserID];
     ids.sort();
     String chatRoomId = ids.join('_');
+    print('ChatService: UserID: $userID, OtherUserID: $otherUserID');
+
 
     return _firestore
-        .collection('chat rooms')
+        .collection('chat_rooms')
         .doc(chatRoomId)
         .collection('messages')
         .orderBy('timestamp', descending: false)
         .snapshots();
+        
   }
+  
 }

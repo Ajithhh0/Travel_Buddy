@@ -2,14 +2,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Message {
   final String senderID;
-  final String senderUsername;
+  final String senderUserEmail;
   final String receiverID;
   final String message;
   final Timestamp timestamp;
 
   Message({
     required this.senderID,
-    required this.senderUsername,
+    required this.senderUserEmail,
     required this.receiverID,
     required this.message,
     required this.timestamp,
@@ -18,7 +18,7 @@ class Message {
   Map<String, dynamic> toMap() {
     return {
       'senderID': senderID,
-      'senderUsername': senderUsername,
+      'senderUserEmail': senderUserEmail,
       'recieverID': receiverID,
       'message': message,
       'timestamp' : timestamp,

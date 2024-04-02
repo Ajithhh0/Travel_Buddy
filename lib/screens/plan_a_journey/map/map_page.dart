@@ -40,12 +40,12 @@ class _MapScreenState extends State<MapScreen> {
   Set<Circle> circleSet = {};
 
   @override
- void initState() {
+  void initState() {
     super.initState();
     checkLocationServices();
- }
+  }
 
- Future<void> checkLocationServices() async {
+  Future<void> checkLocationServices() async {
     bool serviceEnabled;
     LocationPermission permission;
 
@@ -57,12 +57,12 @@ class _MapScreenState extends State<MapScreen> {
         builder: (BuildContext context) {
           return AlertDialog(
             title: const Text('Location Services Disabled'),
-            content: const Text(
-                'Please enable location services for this app.'),
+            content:
+                const Text('Please enable location services for this app.'),
             actions: <Widget>[
               TextButton(
                 onPressed: () {
-                 Navigator.of(context).pop();
+                  Navigator.of(context).pop();
                 },
                 child: const Text('OK'),
               ),
@@ -81,8 +81,7 @@ class _MapScreenState extends State<MapScreen> {
         }
       }
     }
- }
-
+  }
 
   getCurrentLiveLocationUser() async {
     Position positionOfUser = await Geolocator.getCurrentPosition(
@@ -100,8 +99,6 @@ class _MapScreenState extends State<MapScreen> {
   }
 
   retrieveDirectionDetails() async {
-    
-
     TripDetails _createTripDetails() {
       // Create TripDetails object based on your requirements
       return TripDetails(
@@ -294,29 +291,29 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('Plan Your Journey'),
         centerTitle: true,
-         shape: const RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.grey,
         actions: [
           if (tripDirectionDetailsInfo != null)
             IconButton(
               onPressed: () {
-               Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) {
-      TripDetails? tripDetails =
-          Provider.of<TripDetailsProvider>(context, listen: false).tripDetails;
-          
-      return tripDetails != null
-          ? TripPlanning(tripDetails: tripDetails)
-          : Container(); // or any other fallback widget or action
-    },
-  ),
-);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) {
+                      TripDetails? tripDetails =
+                          Provider.of<TripDetailsProvider>(context,
+                                  listen: false)
+                              .tripDetails;
 
-
+                      return tripDetails != null
+                          ? TripPlanning(tripDetails: tripDetails)
+                          : Container(); // or any other fallback widget or action
+                    },
+                  ),
+                );
               },
               icon: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -405,7 +402,7 @@ class _MapScreenState extends State<MapScreen> {
                                   })));
                     },
                     style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.grey,
+                        backgroundColor: Colors.black,
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(24)),
                     child: const Icon(

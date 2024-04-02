@@ -49,8 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: Colors.blue,
-        shadowColor: Colors.yellow,
+        backgroundColor: Colors.grey,
+        shadowColor: Colors.white,
        
         title: Text(_titles[_selectedIndex]),
         centerTitle: true,
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           child: Container(
             decoration: const BoxDecoration(
-              color: Colors.blue,
+              color: Colors.grey,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(26.0),
                 topRight: Radius.circular(26.0),
@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(16),
                 duration: const Duration(milliseconds: 400),
                 tabBackgroundColor: Colors.grey.shade900,
-                backgroundColor:  Colors.blue,
+                backgroundColor:  Colors.grey,
                 color: Colors.black,
                 tabs: const [
                  GButton(

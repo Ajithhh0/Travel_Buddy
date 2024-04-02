@@ -256,6 +256,7 @@ class _RegistrationFormState extends State<RegistrationForm> {
                 ? _selectedDate!.toLocal().toString().split(' ')[0]
                 : '',
             'created_at': DateTime.now(),
+            'uid': usercred.user!.uid,
           };
           await FirebaseFirestore.instance
               .collection('users')

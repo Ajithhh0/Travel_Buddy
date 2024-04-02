@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
+
 import 'package:travel_buddy/misc/shimmer_widget.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
 
@@ -96,7 +96,7 @@ class _TripInfoState extends State<TripInfo> {
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
           ),
-          backgroundColor: Colors.blue,
+          backgroundColor: Colors.grey,
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -112,7 +112,7 @@ class _TripInfoState extends State<TripInfo> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.grey,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -241,6 +241,7 @@ class _TripInfoState extends State<TripInfo> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
       floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: Colors.black,
         onPressed: () {
           Navigator.push(
             context,
@@ -251,8 +252,8 @@ class _TripInfoState extends State<TripInfo> {
             ),
           );
         },
-        label: const Text('Start Trip'),
-        icon: const Icon(Icons.start_outlined),
+        label: const Text('Start Trip', style: TextStyle(color: Colors.white),),
+        icon: const Icon(Icons.start_outlined, color: Colors.white,),
       ),
     );
   }

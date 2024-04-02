@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travel_buddy/screens/chat/chat_page.dart';
 import 'package:travel_buddy/screens/chat/chat_services.dart';
@@ -5,6 +6,7 @@ import 'package:travel_buddy/screens/chat/user_tile.dart';
 
 class ChatScreen extends StatelessWidget {
   final ChatService _chatServices = ChatService();
+  final FirebaseAuth auth = FirebaseAuth.instance;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +38,9 @@ class ChatScreen extends StatelessWidget {
 
   Widget _buildUserListItem(
       Map<String, dynamic> userData, BuildContext context) {
-    return UserTile(
+    
+    if(userData['email'] != auth.currentUser!.email ){
+      return UserTile(
       avatarUrl: userData['avatar_url'],
       username: userData['username'],
       onTap: () {
@@ -44,11 +48,14 @@ class ChatScreen extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (context) => ChatPage(
-              userName: userData['username'], avatarUrl: userData['avatar_url'], receiverID: '',
+              userName: userData['username'], avatarUrl: userData['avatar_url'], receiverID: userData['uid'], receiverEmail: userData['email'],
             ),
           ),
         );
       },
     );
+    } else {
+      return  Container();
+    }
   }
 }
