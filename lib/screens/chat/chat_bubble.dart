@@ -1,28 +1,136 @@
 import 'package:flutter/material.dart';
 
-class ChatBubble extends StatelessWidget {
-  final String message;
-  final bool isCurrentUser;
 
-  const ChatBubble(
-      {super.key, required this.message, required this.isCurrentUser});
+class MessageBubble extends StatelessWidget {
+ 
+  const MessageBubble.first({
+    super.key,
+    required this.userImage,
+    required this.username,
+    required this.message,
+    required this.isMe, required bool isCurrentUser,
+  }) : isFirstInSequence = true;
+
+  
+  const MessageBubble.next({
+    super.key,
+    required this.message,
+    required this.isMe,
+  })  : isFirstInSequence = false,
+        userImage = null,
+        username = null;
+
+  
+  final bool isFirstInSequence;
+
+
+  final String? userImage;
+
+  
+  final String? username;
+  final String message;
+
+  
+  final bool isMe;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isCurrentUser? 
-        Colors.black : Colors.grey,
-        borderRadius:  BorderRadius.circular(12),
+    final theme = Theme.of(context);
 
-      ),
-      padding: const EdgeInsets.all(16),
-      margin: EdgeInsets.symmetric(vertical: 2.5, horizontal: 25 ) ,
-      child: Text(message, 
-      style: TextStyle(
-        color: isCurrentUser? 
-        Colors.white : Colors.black),
+    return Stack(
+      children: [
+        if (userImage != null)
+          Positioned(
+            top: 15,
+            
+            right: isMe ? 0 : null,
+            child: CircleAvatar(
+              backgroundImage: NetworkImage(
+                userImage!,
+              ),
+              backgroundColor: theme.colorScheme.primary.withAlpha(180),
+              radius: 23,
+            ),
+          ),
+        Container(
+          
+          margin: const EdgeInsets.symmetric(horizontal: 46),
+          child: Row(
+            
+            mainAxisAlignment:
+                isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              Column(
+                crossAxisAlignment:
+                    isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                children: [
+                 
+                  if (isFirstInSequence) const SizedBox(height: 18),
+                  if (username != null)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 13,
+                        right: 13,
+                      ),
+                      child: Text(
+                        username!,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+
+                  
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isMe
+                          ? Colors.grey
+                          : Colors.black,
+                   
+                      borderRadius: BorderRadius.only(
+                        topLeft: !isMe && isFirstInSequence
+                            ? Radius.zero
+                            : const Radius.circular(12),
+                        topRight: isMe && isFirstInSequence
+                            ? Radius.zero
+                            : const Radius.circular(12),
+                        bottomLeft: const Radius.circular(12),
+                        bottomRight: const Radius.circular(12),
+                      ),
+                    ),
+                    // Set some reasonable constraints on the width of the
+                    // message bubble so it can adjust to the amount of text
+                    // it should show.
+                    constraints: const BoxConstraints(maxWidth: 200),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 10,
+                      horizontal: 14,
+                    ),
+                    // Margin around the bubble.
+                    margin: const EdgeInsets.symmetric(
+                      vertical: 4,
+                      horizontal: 12,
+                    ),
+                    child: Text(
+                      message,
+                      style: TextStyle(
+                        // Add a little line spacing to make the text look nicer
+                        // when multilined.
+                        height: 1.3,
+                        color: isMe
+                            ? Colors.black87
+                            : theme.colorScheme.onSecondary,
+                      ),
+                      softWrap: true,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
+      ],
     );
   }
 }

@@ -11,26 +11,32 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            //logo
-            Container(
-              height: 80,
-              padding: EdgeInsets.all(1),
-              child: Image.asset('assets/icons/jeep_icon.png',
-              color: Colors.black,),
-            ),
-            Container(
-              color: Colors.white,
-              child: const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: LoginForm(),
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                //logo
+                Container(
+                  height: 80,
+                  padding: EdgeInsets.all(1),
+                  child: Image.asset(
+                    'assets/icons/jeep_icon.png',
+                    color: Colors.black,
+                  ),
                 ),
-              ),
+                SizedBox(height: 20),
+                Container(
+                  color: Colors.white,
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: const Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: LoginForm(),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -50,20 +56,14 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-   
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Container(
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Container(
-            width: 350,
-            height: 350,
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.6,
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Form(
@@ -72,7 +72,7 @@ class _LoginFormState extends State<LoginForm> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Container(
-                      width: 300,
+                      width: MediaQuery.of(context).size.width * 0.7,
                       child: Center(
                         child: TextFormField(
                           controller: _emailController,
@@ -93,7 +93,7 @@ class _LoginFormState extends State<LoginForm> {
                     ),
                     const SizedBox(height: 16.0),
                     Container(
-                      width: 300,
+                      width: MediaQuery.of(context).size.width * 0.7,
                       child: Center(
                         child: TextFormField(
                           controller: _passwordController,
@@ -114,36 +114,28 @@ class _LoginFormState extends State<LoginForm> {
                       ),
                     ),
                     const SizedBox(height: 16.0),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                           ButtonWidget(
-                              text: 'Login',
-                              onTap: () {
-                                login();
-                              }),
-                          // ElevatedButton(
-                          //   onPressed: () async {
-                          //     _login();
-                          //   },
-                          //   child: const Text('Login'),
-                          // ),
-                          Container(
-                            child: TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) =>
-                                          const RegistrationForm()),
-                                );
-                              },
-                              child: const Text("Don't have an account?",
-                              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),),
-                            ),
+                    ButtonWidget(
+                      text: 'Login',
+                      onTap: () {
+                        login();
+                      },
+                    ),
+                    const SizedBox(height: 16.0), 
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegistrationForm(),
                           ),
-                        ],
+                        );
+                      },
+                      child: const Text(
+                        "Don't have an account?",
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],

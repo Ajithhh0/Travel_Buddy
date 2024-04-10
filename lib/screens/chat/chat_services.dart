@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:travel_buddy/screens/plan_a_journey/models/message.dart';
 
 class ChatService {
-  //get instance of firestore
+  //get instance of firestore 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;

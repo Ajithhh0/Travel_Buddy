@@ -37,7 +37,9 @@ class _TripsState extends State<Trips> {
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+     
       appBar: AppBar(
+        
         automaticallyImplyLeading: false,
         title: Row(
           children: [

@@ -28,40 +28,22 @@ class _ChatPageState extends State<ChatPage> {
   final ChatService _chatService = ChatService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  FocusNode myFocusNode = FocusNode();
+  
 
   @override
   void initState() {
     super.initState();
 
-    myFocusNode.addListener(() {
-      if (myFocusNode.hasFocus) {
-        Future.delayed(
-          const Duration(milliseconds: 500),
-          () => scrollDown(),
-        );
-      }
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(microseconds: 500), () => scrollDown());
-    });
   }
 
   @override
   void dispose() {
-    myFocusNode.dispose();
+  
     _messageController.dispose();
     super.dispose();
   }
 
-  final ScrollController _scrollController = ScrollController();
-  void scrollDown() {
-    print('ook');
-    _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-        duration: const Duration(seconds: 1), curve: Curves.fastOutSlowIn);
-    print('done');
-  }
+ 
 
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
@@ -71,7 +53,7 @@ class _ChatPageState extends State<ChatPage> {
       //clear controller
       _messageController.clear();
     }
-    scrollDown();
+    
   }
 
   @override
@@ -124,7 +106,7 @@ class _ChatPageState extends State<ChatPage> {
           }
 
           return ListView(
-            controller: _scrollController,
+            
             children: snapshot.data!.docs
                 .map((doc) => _buildMessageItem(doc))
                 .toList(),
@@ -146,9 +128,12 @@ class _ChatPageState extends State<ChatPage> {
           crossAxisAlignment:
               isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
-            ChatBubble(
+            MessageBubble.first(
               message: data['message'],
               isCurrentUser: isCurrentUser,
+              userImage: data['avatar_url'],
+              username: data['username'],
+              isMe: true,
             ),
           ],
         ));
@@ -170,7 +155,7 @@ class _ChatPageState extends State<ChatPage> {
                 ),
                 fillColor: Colors.grey,
                 labelText: 'Type your message here...'),
-            focusNode: myFocusNode,
+            
           ),
         ),
         const SizedBox(
@@ -183,7 +168,7 @@ class _ChatPageState extends State<ChatPage> {
           child: IconButton(
             onPressed: sendMessage,
             icon: const Icon(
-              Icons.send,
+              Icons.send_outlined,
               color: Colors.white,
             ),
           ),
