@@ -66,19 +66,33 @@ class _ChatPageState extends State<ChatPage> {
             const SizedBox(
               width: 14.0,
             ),
-            CircleAvatar(
-              radius: 20,
-              backgroundImage: NetworkImage(widget.avatarUrl),
+           GestureDetector(
+              onTap: () {
+                // navigate to buddy profile page
+              },
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(widget.avatarUrl),
+                  ),
+                  const SizedBox(width: 18.0),
+                  Text(widget.userName,style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),),
+                  
+                ],
+              ),
             ),
           ],
         ),
-        title: Text(widget.userName),
         centerTitle: true,
+        actions: [
+          IconButton(onPressed: (){}, icon: Icon(Icons.call))
+        ],
       ),
       body: Column(
         children: [
           Expanded(child: _buildMessageList()),
-          const SizedBox(height: 8.0,),
+          const SizedBox(height: 8.0),
           _buildUserInput(),
         ],
       ),
@@ -142,7 +156,7 @@ class _ChatPageState extends State<ChatPage> {
               return Column(
                 children: [
                   Container(
-                    color: Colors.grey[300],
+                    color: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                     child: Text(
                       DateFormat('EEE, MMM d, yyyy').format(currentMessageTimestamp.toDate()),
@@ -218,7 +232,7 @@ class _ChatPageState extends State<ChatPage> {
 
   Widget _buildUserInput() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 18.0, left: 5.0),
+      padding: const EdgeInsets.only(bottom: 18.0, left: 15.0),
       child: Row(children: [
         Expanded(
           child: TextField(
@@ -228,7 +242,7 @@ class _ChatPageState extends State<ChatPage> {
             decoration: InputDecoration(
               hoverColor: Colors.grey[400],
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
+                borderRadius: BorderRadius.circular(28.0),
               ),
               fillColor: Colors.grey,
               labelText: 'Type your message here...',
