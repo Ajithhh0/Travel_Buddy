@@ -40,7 +40,7 @@ class ChatScreen extends StatelessWidget {
     );
   }
 
- Stream<String> _getRecentMessage(String receiverID) {
+ Stream<Map<String, dynamic>> _getRecentMessage(String receiverID) {
   final currentUserID = auth.currentUser!.uid;
   List<String> ids = [currentUserID, receiverID];
   ids.sort();
@@ -57,9 +57,15 @@ class ChatScreen extends StatelessWidget {
     if (snapshot.docs.isNotEmpty) {
       Map<String, dynamic> messageData =
           snapshot.docs.first.data() as Map<String, dynamic>;
-      return messageData['message'];
+      return {
+        'message': messageData['message'],
+        'timestamp': messageData['timestamp'],
+      };
     } else {
-      return 'No messages yet';
+      return {
+        'message': 'No messages yet',
+        'timestamp': null,
+      };
     }
   });
 }
@@ -67,14 +73,15 @@ class ChatScreen extends StatelessWidget {
  Widget _buildUserListItem(
     Map<String, dynamic> userData, BuildContext context) {
   if (userData['email'] != auth.currentUser!.email) {
-    return StreamBuilder<String>(
+    return StreamBuilder<Map<String, dynamic>>(
       stream: _getRecentMessage(userData['uid']),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
           return UserTile(
             avatarUrl: userData['avatar_url'],
             username: userData['username'],
-            recentMessage: snapshot.data!,
+            recentMessage: snapshot.data!['message'],
+            recentMessageTimestamp: snapshot.data!['timestamp'],
             onTap: () {
               Navigator.push(
                 context,
