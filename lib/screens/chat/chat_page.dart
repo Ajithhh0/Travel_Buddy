@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:travel_buddy/screens/chat/chat_bubble.dart';
 import 'package:travel_buddy/screens/chat/chat_services.dart';
 
@@ -10,13 +11,13 @@ class ChatPage extends StatefulWidget {
   final String avatarUrl;
   final String receiverEmail;
 
-  ChatPage(
-      {Key? key,
-      required this.userName,
-      required this.avatarUrl,
-      required this.receiverID,
-      required this.receiverEmail})
-      : super(key: key);
+  ChatPage({
+    Key? key,
+    required this.userName,
+    required this.avatarUrl,
+    required this.receiverID,
+    required this.receiverEmail,
+  }) : super(key: key);
 
   @override
   State<ChatPage> createState() => _ChatPageState();
@@ -24,39 +25,32 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
-
   final ChatService _chatService = ChatService();
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  
 
   @override
   void initState() {
     super.initState();
-
   }
 
   @override
   void dispose() {
-  
     _messageController.dispose();
     super.dispose();
   }
 
- 
-
   void sendMessage() async {
     if (_messageController.text.isNotEmpty) {
       await _chatService.sendMessages(
-          widget.receiverID, _messageController.text);
+        widget.receiverID,
+        _messageController.text,
+      );
 
-      //clear controller
+      // Clear the controller
       _messageController.clear();
     }
-    
   }
-
-  @override
+@override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -84,6 +78,7 @@ class _ChatPageState extends State<ChatPage> {
       body: Column(
         children: [
           Expanded(child: _buildMessageList()),
+          const SizedBox(height: 8.0,),
           _buildUserInput(),
         ],
       ),
@@ -91,52 +86,134 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageList() {
-    String senderID = FirebaseAuth.instance.currentUser!.uid;
+    final authenticatedUser = FirebaseAuth.instance.currentUser;
 
     return StreamBuilder(
-        stream: _chatService.getMesssages(widget.receiverID, senderID),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            print(snapshot.error);
-            return Text('Error: ${snapshot.error}');
-          }
+      stream: _chatService.getMesssages(
+        widget.receiverID,
+        authenticatedUser!.uid,
+      ),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          print(snapshot.error);
+          return Text('Error: ${snapshot.error}');
+        }
 
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
-          }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const CircularProgressIndicator();
+        }
 
-          return ListView(
-            
-            children: snapshot.data!.docs
-                .map((doc) => _buildMessageItem(doc))
-                .toList(),
+        final loadedMessages = snapshot.data!.docs;
+        if (loadedMessages.isEmpty) {
+          return Center(
+            child: Text(
+              'No messages',
+              style: TextStyle(color: Colors.grey[700]),
+            ),
           );
-        });
+        }
+
+        return ListView.builder(
+          reverse: true,
+          itemCount: loadedMessages.length,
+          itemBuilder: (ctx, index) {
+            final currentMessage =
+                loadedMessages[index].data() as Map<String, dynamic>;
+            final currentMessageTimestamp =
+                currentMessage['timestamp'] as Timestamp;
+
+            // Group messages by day
+            final currentMessageDay =
+                DateTime.fromMillisecondsSinceEpoch(currentMessageTimestamp.millisecondsSinceEpoch)
+                    .day;
+
+            // Check if the previous message is from a different day
+            final previousMessageDay = index + 1 < loadedMessages.length
+                ? DateTime.fromMillisecondsSinceEpoch(
+                        (loadedMessages[index + 1].data()
+                            as Map<String, dynamic>)['timestamp']
+                            .millisecondsSinceEpoch)
+                    .day
+                : null;
+
+            final isNewDay = previousMessageDay == null || previousMessageDay != currentMessageDay;
+
+            if (isNewDay) {
+              return Column(
+                children: [
+                  Container(
+                    color: Colors.grey[300],
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    child: Text(
+                      DateFormat('EEE, MMM d, yyyy').format(currentMessageTimestamp.toDate()),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey[800],
+                      ),
+                    ),
+                  ),
+                  _buildMessageBubble(currentMessage, authenticatedUser.uid, index, loadedMessages),
+                ],
+              );
+            } else {
+              return _buildMessageBubble(currentMessage, authenticatedUser.uid, index, loadedMessages);
+            }
+          },
+        );
+      },
+    );
   }
 
-  Widget _buildMessageItem(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+  Widget _buildMessageBubble(
+    Map<String, dynamic> currentMessage,
+    String currentUserId,
+    int index,
+    List<QueryDocumentSnapshot<Object?>> loadedMessages,
+  ) {
+    final currentMessageTimestamp = currentMessage['timestamp'] as Timestamp;
+    final currentMessageDay =
+        DateTime.fromMillisecondsSinceEpoch(currentMessageTimestamp.millisecondsSinceEpoch).day;
 
-    bool isCurrentUser = data['senderID'] == _auth.currentUser!.uid;
+    final nextMessageDay = index + 1 < loadedMessages.length
+        ? DateTime.fromMillisecondsSinceEpoch(
+                (loadedMessages[index + 1].data() as Map<String, dynamic>)['timestamp']
+                    .millisecondsSinceEpoch)
+            .day
+        : null;
 
-    var alignment =
-        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
+    final isNewDay = nextMessageDay == null || nextMessageDay != currentMessageDay;
 
-    return Container(
-        alignment: alignment,
-        child: Column(
-          crossAxisAlignment:
-              isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            MessageBubble.first(
-              message: data['message'],
-              isCurrentUser: isCurrentUser,
-              userImage: data['avatar_url'],
-              username: data['username'],
-              isMe: true,
-            ),
-          ],
-        ));
+    final currentMessageUserId = currentMessage['senderID'];
+    final nextMessage = index + 1 < loadedMessages.length
+        ? loadedMessages[index + 1].data() as Map<String, dynamic>
+        : null;
+
+    final nextMessageUserId = nextMessage != null ? nextMessage['senderID'] : null;
+    final nextUserIsSame = nextMessageUserId == currentMessageUserId;
+
+    if (isNewDay && nextUserIsSame) {
+      return MessageBubble.first(
+        userImage: currentMessage['userImage'],
+        username: currentMessage['username'],
+        message: currentMessage['message'],
+        timestamp: currentMessage['timestamp'],
+        isMe: currentUserId == currentMessageUserId,
+      );
+    } else if (nextUserIsSame) {
+      return MessageBubble.next(
+        message: currentMessage['message'],
+        timestamp: currentMessage['timestamp'],
+        isMe: currentUserId == currentMessageUserId,
+      );
+    } else {
+      return MessageBubble.first(
+        userImage: currentMessage['userImage'],
+        username: currentMessage['username'],
+        message: currentMessage['message'],
+        timestamp: currentMessage['timestamp'],
+        isMe: currentUserId == currentMessageUserId,
+      );
+    }
   }
 
   Widget _buildUserInput() {
@@ -149,18 +226,22 @@ class _ChatPageState extends State<ChatPage> {
             autocorrect: true,
             controller: _messageController,
             decoration: InputDecoration(
-                hoverColor: Colors.grey[400],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                fillColor: Colors.grey,
-                labelText: 'Type your message here...'),
-            
+              hoverColor: Colors.grey[400],
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              fillColor: Colors.grey,
+              labelText: 'Type your message here...',
+            ),
           ),
         ),
         const SizedBox(
           width: 8.0,
         ),
+        IconButton(
+          onPressed: (){},
+          icon: const Icon(Icons.add)),
+        const SizedBox(width: 8.0,),
         Container(
           decoration:
               const BoxDecoration(color: Colors.black, shape: BoxShape.circle),

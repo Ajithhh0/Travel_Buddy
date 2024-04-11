@@ -25,6 +25,12 @@ class ChatService {
     final String currentUID = _auth.currentUser!.uid;
     final String currentUserEmail = _auth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
+    final user = FirebaseAuth.instance.currentUser!;
+    final userData = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .get();
+   
 
     //create a new message
     Message newMessage = Message(
@@ -33,6 +39,8 @@ class ChatService {
       receiverID: receiverID,
       message: message,
       timestamp: timestamp,
+      username: userData.data()![ "username"],
+      userImage: userData.data()![ "avatar_url"],
     );
 
     //construct chat room ID
@@ -61,7 +69,7 @@ class ChatService {
         .collection('chat_rooms')
         .doc(chatRoomId)
         .collection('messages')
-        .orderBy('timestamp', descending: false)
+        .orderBy('timestamp', descending: true)
         .snapshots();
         
   }

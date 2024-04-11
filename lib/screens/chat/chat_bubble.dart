@@ -1,62 +1,58 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
+import 'package:travel_buddy/screens/chat/chat_services.dart';
 
 class MessageBubble extends StatelessWidget {
- 
   const MessageBubble.first({
     super.key,
     required this.userImage,
     required this.username,
     required this.message,
-    required this.isMe, required bool isCurrentUser,
+    required this.timestamp,
+    required this.isMe,
   }) : isFirstInSequence = true;
 
-  
   const MessageBubble.next({
     super.key,
     required this.message,
+    required this.timestamp,
     required this.isMe,
   })  : isFirstInSequence = false,
         userImage = null,
         username = null;
 
-  
   final bool isFirstInSequence;
-
-
   final String? userImage;
-
-  
   final String? username;
   final String message;
-
-  
+  final Timestamp timestamp;
   final bool isMe;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final timeFormat = DateFormat('HH:mm');
 
     return Stack(
       children: [
         if (userImage != null)
           Positioned(
             top: 15,
-            
-            right: isMe ? 0 : null,
+            right: isMe ? 10 : null,
+            left: !isMe ? 10 : null,
             child: CircleAvatar(
               backgroundImage: NetworkImage(
                 userImage!,
               ),
               backgroundColor: theme.colorScheme.primary.withAlpha(180),
-              radius: 23,
+              radius: 20,
             ),
           ),
         Container(
-          
           margin: const EdgeInsets.symmetric(horizontal: 46),
           child: Row(
-            
             mainAxisAlignment:
                 isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
             children: [
@@ -64,7 +60,6 @@ class MessageBubble extends StatelessWidget {
                 crossAxisAlignment:
                     isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                 children: [
-                 
                   if (isFirstInSequence) const SizedBox(height: 18),
                   if (username != null)
                     Padding(
@@ -80,14 +75,9 @@ class MessageBubble extends StatelessWidget {
                         ),
                       ),
                     ),
-
-                  
                   Container(
                     decoration: BoxDecoration(
-                      color: isMe
-                          ? Colors.grey
-                          : Colors.black,
-                   
+                      color: isMe ? Colors.grey : Colors.black,
                       borderRadius: BorderRadius.only(
                         topLeft: !isMe && isFirstInSequence
                             ? Radius.zero
@@ -99,30 +89,41 @@ class MessageBubble extends StatelessWidget {
                         bottomRight: const Radius.circular(12),
                       ),
                     ),
-                    // Set some reasonable constraints on the width of the
-                    // message bubble so it can adjust to the amount of text
-                    // it should show.
                     constraints: const BoxConstraints(maxWidth: 200),
                     padding: const EdgeInsets.symmetric(
                       vertical: 10,
                       horizontal: 14,
                     ),
-                    // Margin around the bubble.
                     margin: const EdgeInsets.symmetric(
                       vertical: 4,
                       horizontal: 12,
                     ),
-                    child: Text(
-                      message,
-                      style: TextStyle(
-                        // Add a little line spacing to make the text look nicer
-                        // when multilined.
-                        height: 1.3,
-                        color: isMe
-                            ? Colors.black87
-                            : theme.colorScheme.onSecondary,
-                      ),
-                      softWrap: true,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            message,
+                            style: TextStyle(
+                              height: 1.3,
+                              color: isMe
+                                  ? Colors.black87
+                                  : theme.colorScheme.onSecondary,
+                            ),
+                            softWrap: true,
+                            textAlign: isMe ? TextAlign.right : TextAlign.left,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+                        Text(
+                          timeFormat.format(timestamp.toDate()),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isMe ? Colors.black54 : Colors.white70,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

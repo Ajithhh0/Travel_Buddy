@@ -1,14 +1,20 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:travel_buddy/screens/chat/chat_page.dart';
+import 'package:travel_buddy/screens/chat/chat_services.dart';
 
 class UserTile extends StatelessWidget {
   final String username;
   final String avatarUrl;
+  final String recentMessage;
   final void Function()? onTap;
 
   const UserTile({
     Key? key,
     required this.username,
     required this.avatarUrl,
+    required this.recentMessage,
     required this.onTap,
   }) : super(key: key);
 
@@ -29,7 +35,25 @@ class UserTile extends StatelessWidget {
               backgroundImage: NetworkImage(avatarUrl),
             ),
             const SizedBox(width: 20),
-            Text(username),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  username,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  recentMessage,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12.0,
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),

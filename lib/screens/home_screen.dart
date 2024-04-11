@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
       drawer: MyDrawer(),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.black,
-        selectedItemColor: Colors.amber,
+        selectedItemColor: Colors.grey[700],
         unselectedItemColor: Colors.black,
         currentIndex: _selectedIndex,
         onTap: (index) {
