@@ -2,8 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
 import 'package:travel_buddy/screens/chat/chat_bubble.dart';
 import 'package:travel_buddy/screens/chat/chat_services.dart';
+import 'package:uuid/uuid.dart';
 
 class ChatPage extends StatefulWidget {
   final String userName;
@@ -50,7 +52,8 @@ class _ChatPageState extends State<ChatPage> {
       _messageController.clear();
     }
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -66,7 +69,7 @@ class _ChatPageState extends State<ChatPage> {
             const SizedBox(
               width: 14.0,
             ),
-           GestureDetector(
+            GestureDetector(
               onTap: () {
                 // navigate to buddy profile page
               },
@@ -77,8 +80,11 @@ class _ChatPageState extends State<ChatPage> {
                     backgroundImage: NetworkImage(widget.avatarUrl),
                   ),
                   const SizedBox(width: 18.0),
-                  Text(widget.userName,style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),),
-                  
+                  Text(
+                    widget.userName,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 18.0),
+                  ),
                 ],
               ),
             ),
@@ -86,7 +92,11 @@ class _ChatPageState extends State<ChatPage> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(onPressed: (){}, icon: Icon(Icons.call))
+          IconButton(
+              onPressed: () {
+                
+              },
+              icon: Icon(Icons.call))
         ],
       ),
       body: Column(
@@ -128,7 +138,7 @@ class _ChatPageState extends State<ChatPage> {
         }
 
         return ListView.builder(
-          reverse: true,
+          reverse: true, 
           itemCount: loadedMessages.length,
           itemBuilder: (ctx, index) {
             final currentMessage =
@@ -137,40 +147,44 @@ class _ChatPageState extends State<ChatPage> {
                 currentMessage['timestamp'] as Timestamp;
 
             // Group messages by day
-            final currentMessageDay =
-                DateTime.fromMillisecondsSinceEpoch(currentMessageTimestamp.millisecondsSinceEpoch)
-                    .day;
+            final currentMessageDay = DateTime.fromMillisecondsSinceEpoch(
+                    currentMessageTimestamp.millisecondsSinceEpoch)
+                .day;
 
             // Check if the previous message is from a different day
             final previousMessageDay = index + 1 < loadedMessages.length
-                ? DateTime.fromMillisecondsSinceEpoch(
-                        (loadedMessages[index + 1].data()
-                            as Map<String, dynamic>)['timestamp']
-                            .millisecondsSinceEpoch)
+                ? DateTime.fromMillisecondsSinceEpoch((loadedMessages[index + 1]
+                            .data() as Map<String, dynamic>)['timestamp']
+                        .millisecondsSinceEpoch)
                     .day
                 : null;
 
-            final isNewDay = previousMessageDay == null || previousMessageDay != currentMessageDay;
+            final isNewDay = previousMessageDay == null ||
+                previousMessageDay != currentMessageDay;
 
             if (isNewDay) {
               return Column(
                 children: [
                   Container(
                     color: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
                     child: Text(
-                      DateFormat('EEE, MMM d, yyyy').format(currentMessageTimestamp.toDate()),
+                      DateFormat('EEE, MMM d, yyyy')
+                          .format(currentMessageTimestamp.toDate()),
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[800],
                       ),
                     ),
                   ),
-                  _buildMessageBubble(currentMessage, authenticatedUser.uid, index, loadedMessages),
+                  _buildMessageBubble(currentMessage, authenticatedUser.uid,
+                      index, loadedMessages),
                 ],
               );
             } else {
-              return _buildMessageBubble(currentMessage, authenticatedUser.uid, index, loadedMessages);
+              return _buildMessageBubble(
+                  currentMessage, authenticatedUser.uid, index, loadedMessages);
             }
           },
         );
@@ -185,24 +199,27 @@ class _ChatPageState extends State<ChatPage> {
     List<QueryDocumentSnapshot<Object?>> loadedMessages,
   ) {
     final currentMessageTimestamp = currentMessage['timestamp'] as Timestamp;
-    final currentMessageDay =
-        DateTime.fromMillisecondsSinceEpoch(currentMessageTimestamp.millisecondsSinceEpoch).day;
+    final currentMessageDay = DateTime.fromMillisecondsSinceEpoch(
+            currentMessageTimestamp.millisecondsSinceEpoch)
+        .day;
 
     final nextMessageDay = index + 1 < loadedMessages.length
-        ? DateTime.fromMillisecondsSinceEpoch(
-                (loadedMessages[index + 1].data() as Map<String, dynamic>)['timestamp']
-                    .millisecondsSinceEpoch)
+        ? DateTime.fromMillisecondsSinceEpoch((loadedMessages[index + 1].data()
+                    as Map<String, dynamic>)['timestamp']
+                .millisecondsSinceEpoch)
             .day
         : null;
 
-    final isNewDay = nextMessageDay == null || nextMessageDay != currentMessageDay;
+    final isNewDay =
+        nextMessageDay == null || nextMessageDay != currentMessageDay;
 
     final currentMessageUserId = currentMessage['senderID'];
     final nextMessage = index + 1 < loadedMessages.length
         ? loadedMessages[index + 1].data() as Map<String, dynamic>
         : null;
 
-    final nextMessageUserId = nextMessage != null ? nextMessage['senderID'] : null;
+    final nextMessageUserId =
+        nextMessage != null ? nextMessage['senderID'] : null;
     final nextUserIsSame = nextMessageUserId == currentMessageUserId;
 
     if (isNewDay && nextUserIsSame) {
@@ -252,10 +269,10 @@ class _ChatPageState extends State<ChatPage> {
         const SizedBox(
           width: 8.0,
         ),
-        IconButton(
-          onPressed: (){},
-          icon: const Icon(Icons.add)),
-        const SizedBox(width: 8.0,),
+        IconButton(onPressed: () {}, icon: const Icon(Icons.add)),
+        const SizedBox(
+          width: 8.0,
+        ),
         Container(
           decoration:
               const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
@@ -271,4 +288,6 @@ class _ChatPageState extends State<ChatPage> {
       ]),
     );
   }
+  
+  
 }

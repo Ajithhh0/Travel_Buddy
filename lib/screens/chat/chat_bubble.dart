@@ -80,7 +80,7 @@ class MessageBubble extends StatelessWidget {
                       color: isMe ? Colors.grey : Colors.black,
                       borderRadius: BorderRadius.only(
                         topLeft: !isMe && isFirstInSequence
-                            ? Radius.zero
+                            ? Radius.zero 
                             : const Radius.circular(12),
                         topRight: isMe && isFirstInSequence
                             ? Radius.zero

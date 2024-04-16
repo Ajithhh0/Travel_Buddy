@@ -62,7 +62,7 @@ class ChatService {
     List<String> ids = [userID, otherUserID];
     ids.sort();
     String chatRoomId = ids.join('_');
-    print('ChatService: UserID: $userID, OtherUserID: $otherUserID');
+    print('ChatService: UserID: $userID, OtherUserID: $otherUserID'); 
 
 
     return _firestore

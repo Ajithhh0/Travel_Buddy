@@ -13,7 +13,7 @@ class UserTile extends StatelessWidget {
     Key? key,
     required this.username,
     required this.avatarUrl,
-    required this.recentMessage,
+    required this.recentMessage, 
     required this.recentMessageTimestamp,
     required this.onTap,
   }) : super(key: key);

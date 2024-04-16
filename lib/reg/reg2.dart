@@ -2,7 +2,7 @@
   import 'package:firebase_auth/firebase_auth.dart';
   import 'package:flutter/material.dart';
   import 'package:travel_buddy/misc_widgets/buttons.dart';
-  import 'package:travel_buddy/screens/home_screen.dart';
+  import 'package:travel_buddy/screens/home_screen2.dart';
 
   class RegistrationForm extends StatefulWidget {
     const RegistrationForm({Key? key});
@@ -13,13 +13,13 @@
 
   class _RegistrationFormState extends State<RegistrationForm> {
     final _formKey = GlobalKey<FormState>();
-    final _nameController = TextEditingController();
-    final _usnController = TextEditingController();
+    
+    
     final _emailController = TextEditingController();
-    final _mobileController = TextEditingController();
+    
     final _passwordController = TextEditingController();
     final _confirmPasswordController = TextEditingController();
-    DateTime? _selectedDate;
+    
 
     @override
     Widget build(BuildContext context) {
@@ -37,6 +37,7 @@
         body: SingleChildScrollView(
           child: Container(
             child: Center(
+
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Container(
@@ -50,47 +51,14 @@
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Container(
-                            width: 300,
-                            child: Center(
-                              child: TextFormField(
-                                controller: _nameController,
-                                decoration: InputDecoration(
-                                  labelText: 'Name',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your name';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
-                          Container(
-                            width: 300,
-                            child: Center(
-                              child: TextFormField(
-                                controller: _usnController,
-                                decoration: InputDecoration(
-                                  labelText: 'Username',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your username';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
+                  height: 120,
+                  padding: EdgeInsets.all(1),
+                  child: Image.asset(
+                    'assets/icons/jeep_icon.png',
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 14.0,),
                           Container(
                             width: 300,
                             child: Center(
@@ -112,73 +80,8 @@
                             ),
                           ),
                           const SizedBox(height: 16.0),
-                          Container(
-                            width: 300,
-                            child: Center(
-                              child: TextFormField(
-                                controller: _mobileController,
-                                decoration: InputDecoration(
-                                  labelText: 'Mobile',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                  ),
-                                ),
-                                keyboardType: TextInputType.number,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your mobile number';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
-                          Container(
-                            width: 300,
-                            padding: const EdgeInsets.all(10.0),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: const Color.fromARGB(255, 110, 103, 103),
-                              ),
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const Text(
-                                  'Date of Birth: ',
-                                  textAlign: TextAlign.right,
-                                ),
-                                const SizedBox(width: 10),
-                                TextButton(
-                                  onPressed: () async {
-                                    final picked = await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime(1900),
-                                      lastDate: DateTime.now(),
-                                    );
-                                    if (picked != null &&
-                                        picked != _selectedDate) {
-                                      setState(() {
-                                        _selectedDate = picked;
-                                      });
-                                    }
-                                  },
-                                  child: Text(
-                                    _selectedDate != null
-                                        ? _selectedDate!
-                                            .toLocal()
-                                            .toString()
-                                            .split(' ')[0]
-                                        : 'Select Date',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16.0),
+                         
+                          
                           Container(
                             width: 300,
                             child: Center(
@@ -247,16 +150,17 @@
 
           if (usercred.user != null) {
             var data = {
-              'full_name': _nameController.text.trim(),
-              'username': _usnController.text.trim(),
+              'avatar_url': ' ',
+              'full_name': ' ',
+              'username': ' ',
               'email': _emailController.text.trim(),
-              'mobile': _mobileController.text.trim(),
+              'mobile': ' ',
               'password': _passwordController.text.trim(),
-              'dob': _selectedDate != null
-                  ? _selectedDate!.toLocal().toString().split(' ')[0]
-                  : '',
+              'dob':' ',
+              'gender': ' ',
               'created_at': DateTime.now(),
               'uid': usercred.user!.uid,
+              'filled_status': 1,
             };
             await FirebaseFirestore.instance
                 .collection('users')

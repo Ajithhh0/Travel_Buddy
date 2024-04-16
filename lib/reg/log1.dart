@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:travel_buddy/misc_widgets/buttons.dart';
-import 'package:travel_buddy/reg/reg1.dart';
-import 'package:travel_buddy/screens/home_screen.dart';
+import 'package:travel_buddy/reg/reg2.dart';
+import 'package:travel_buddy/screens/home_screen2.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({Key? key});
@@ -10,6 +10,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(title: Text('Login'),centerTitle: true,),
       body: Center(
         child: SingleChildScrollView(
           child: Center(
@@ -18,14 +19,14 @@ class LoginPage extends StatelessWidget {
               children: [
                 //logo
                 Container(
-                  height: 80,
+                  height: 120,
                   padding: EdgeInsets.all(1),
                   child: Image.asset(
                     'assets/icons/jeep_icon.png',
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 20),
+                SizedBox(height: 14.0),
                 Container(
                   color: Colors.white,
                   width: MediaQuery.of(context).size.width * 0.9,
@@ -148,7 +149,7 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  void login() async {
+  void login() async { 
     if (_formKey.currentState?.validate() ?? false) {
       print(_emailController);
       try {

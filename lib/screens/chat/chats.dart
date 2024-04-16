@@ -9,7 +9,7 @@ class ChatScreen extends StatelessWidget {
   final ChatService _chatServices = ChatService();
   final FirebaseAuth auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(

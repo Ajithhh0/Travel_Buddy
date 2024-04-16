@@ -1,11 +1,14 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:travel_buddy/screens/profile/buddy_list.dart';
 import 'package:travel_buddy/screens/profile/editprofile.dart';
 import 'package:travel_buddy/screens/profile/search.dart';
@@ -23,29 +26,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String? _mobile;
   String? _dob;
   String? _fullName;
-
+  String? _gender;
+  StreamSubscription? _userSubscription;
   final picker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _loadUserData();
+    _startUserListener();
   }
 
-  Future<void> _loadUserData() async {
-    String userId = FirebaseAuth.instance.currentUser!.uid;
-    DocumentSnapshot userDoc =
-        await FirebaseFirestore.instance.collection('users').doc(userId).get();
+  void _startUserListener() {
+  String userId = FirebaseAuth.instance.currentUser!.uid;
+  _userSubscription = FirebaseFirestore.instance
+      .collection('users')
+      .doc(userId)
+      .snapshots()
+      .listen((snapshot) {
     setState(() {
-      _avatarUrl = userDoc['avatar_url'];
-      _username = userDoc['username'];
-      _email = userDoc['email'];
-      _mobile = userDoc['mobile'];
-      _dob = userDoc['dob'];
-      _fullName = userDoc['full_name'];
+      _avatarUrl = snapshot.get('avatar_url');
+      _username = snapshot.get('username');
+      _email = snapshot.get('email');
+      _mobile = snapshot.get('mobile');
+      _dob = snapshot.get('dob') != null
+          ? DateFormat('dd:MM:yyyy').format(snapshot.get('dob').toDate())
+          : null;
+      _fullName = snapshot.get('full_name');
+      _gender = snapshot.get('gender');
     });
-  }
+  });
+}
 
+@override
+void dispose() {
+  _userSubscription?.cancel();
+  super.dispose();
+}
   Future<void> getImage() async {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
@@ -94,7 +110,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     // Display username
                     Center(
                       child: Text(
-                        '$_username' ?? 'Loading...',
+                        _username ?? 'Loading...',
                         style: GoogleFonts.poppins(
                           textStyle: Theme.of(context).textTheme.displayLarge,
                           fontSize: 30,
@@ -116,15 +132,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             );
                           },
                           style: ElevatedButton.styleFrom(
-                            foregroundColor: Colors
-                                .white,
-                                backgroundColor: Colors
-                                .orange, // Use a solid color for the button's text and icon
+                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.orange,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                  25.0), // Adjust the radius as needed
+                              borderRadius: BorderRadius.circular(25.0),
                             ),
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: 12.0, horizontal: 16.0),
                           ),
                           child: const Text(
@@ -148,6 +161,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         _buildTableRow('Email:', _email ?? 'Loading...'),
                         _buildTableRow('Mobile:', _mobile ?? 'Loading...'),
                         _buildTableRow('Date of Birth:', _dob ?? 'Loading...'),
+                        _buildTableRow('Gender', _gender ?? 'Loading...'),
                       ],
                     ),
                     const SizedBox(
