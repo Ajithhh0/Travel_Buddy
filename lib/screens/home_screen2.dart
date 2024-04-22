@@ -247,11 +247,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color.fromARGB(0, 0, 0, 0),
         shadowColor: Colors.white,
         title: Text(_titles[_selectedIndex]),
         centerTitle: true,

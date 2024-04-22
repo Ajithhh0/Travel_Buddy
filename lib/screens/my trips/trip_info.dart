@@ -3,6 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'package:travel_buddy/misc/shimmer_widget.dart';
+import 'package:travel_buddy/screens/my%20trips/Navigation.dart/nav_map.dart';
+import 'package:travel_buddy/screens/my%20trips/vehicle_config.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
 
 class TripInfo extends StatefulWidget {
@@ -90,13 +92,14 @@ class _TripInfoState extends State<TripInfo> {
     if (tripSnapshot == null) {
       // Return a loading indicator while fetching trip data
       return Scaffold(
+        extendBodyBehindAppBar: true,
         appBar: AppBar(
           title: const Text('Trip Details'),
           centerTitle: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-          ),
-          backgroundColor: Colors.grey,
+          // shape: const RoundedRectangleBorder(
+          //   borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+          // ),
+          backgroundColor: Colors.white,
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -109,10 +112,10 @@ class _TripInfoState extends State<TripInfo> {
       appBar: AppBar(
         title: const Text('Trip Details'),
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
-        backgroundColor: Colors.grey,
+        // shape: const RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        // ),
+        backgroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -236,6 +239,22 @@ class _TripInfoState extends State<TripInfo> {
                 child: const Text('Budget'),
               ),
             ),
+            const SizedBox(width: 200.0,),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => VehicleConfig()
+                  ),
+                );
+              },
+              child: Container(
+                height: 40,
+                alignment: Alignment.bottomRight,
+                child: const Text('Vehicle Details'),
+              ),
+            ),
           ],
         ),
       ),
@@ -246,9 +265,7 @@ class _TripInfoState extends State<TripInfo> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const ViewBudget(
-                tripName: '',
-              ),
+              builder: (context) => NavMap(),
             ),
           );
         },

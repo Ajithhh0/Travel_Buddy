@@ -158,7 +158,7 @@ class _MapScreenState extends State<MapScreen> {
     ///Directions API
     var detailsFromDirectionAPI =
         await CommonMethods.getDirectionDetailsFromAPI(
-            startingGeoGraphicCoOrdinates, destinationGeoGraphicCoOrdinates);
+            startingGeoGraphicCoOrdinates, destinationGeoGraphicCoOrdinates, gMapKey);
     setState(() {
       tripDirectionDetailsInfo = detailsFromDirectionAPI;
     });
@@ -288,13 +288,14 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+     // extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text('Plan Your Journey'),
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
-        backgroundColor: Colors.grey,
+        // shape: const RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        // ),
+        backgroundColor: Colors.white,
         actions: [
           if (tripDirectionDetailsInfo != null)
             IconButton(
@@ -390,7 +391,7 @@ class _MapScreenState extends State<MapScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () { 
                       print('object');
                       Navigator.push(
                           context,

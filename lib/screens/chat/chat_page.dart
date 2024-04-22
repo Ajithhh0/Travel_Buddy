@@ -56,7 +56,9 @@ class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Color.fromARGB(115, 255, 255, 255),
         leadingWidth: 195,
         leading: Row(
           children: [

@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -12,31 +11,47 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   String? username;
+  final TextEditingController _searchController = TextEditingController();
 
-  @override
+   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Search your Buddies'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: SizedBox(
+              width: 330,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (val) {
+                  setState(() {
+                    username = val;
+                  });
+                },
+                decoration:InputDecoration(
+                  fillColor: Colors.grey,
+                  hintText: 'Search',
+                  border: InputBorder.none,
+                  suffixIcon: _searchController.text.isNotEmpty ? 
+                  IconButton(
+                    onPressed: () {
+                       _searchController.clear();
+                      setState(() {
+                              username = null;
+                            });
+                    },
+                    icon: const Icon(Icons.clear),
+                  
+                  ): null,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: TextField(
-              decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                labelText: "Search",
-              ),
-              onChanged: (val) {
-                setState(() {
-                  username = val;
-                });
-              },
-            ),
-          ),
           if (username != null && username!.length >= 1)
             Expanded(
               child: FutureBuilder<QuerySnapshot>(
@@ -99,7 +114,7 @@ class _SearchPageState extends State<SearchPage> {
                                 return Text('Loading...');
                               }
 
-                              return Text(snapshot.data! ? "Remove" : "Add");
+                              return Text(snapshot.data! ? "Remove" : "Send Request");
                             },
                           ),
                         ),

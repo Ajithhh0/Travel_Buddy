@@ -12,7 +12,7 @@ import 'package:travel_buddy/misc/app_info.dart';
 import 'package:travel_buddy/misc/members_provider.dart';
 import 'package:travel_buddy/misc/tripdetailsprovider.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
-import 'package:travel_buddy/reg/log1.dart';
+import 'package:travel_buddy/reg/log1.dart'; 
 
 
 

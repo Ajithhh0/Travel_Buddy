@@ -69,6 +69,8 @@ dependencies:
   firebase_storage: ^11.7.0
   flutter_slidable: ^3.0.1
   shimmer: ^3.0.0
+  gtk: ^2.1.0
+  file_picker: ^8.0.2
   
 dev_dependencies:
   flutter_test:
@@ -87,20 +89,7 @@ dev_dependencies:
 # The following section is specific to Flutter packages.
 flutter:
   assets:
-    - assets/images/jeep.png
-    - assets/images/b1.png
-    - assets/images/c1.png
-    - assets/images/c2.png
-    - assets/images/c3.png
-    - assets/images/m1.png
-    - assets/images/m2.png
-    - assets/images/jeep ai.jpg
-    - assets/images/jeep00.jpg
-    - assets/images/jeepii.jpg
-    - assets/images/jeep00.png
-    - assets/images/jeep_ai_no_bg.png
-    - assets/images/lc.png
-    - assets/images/travel_home.png
+    - assets/images/
     - assets/icons/
 
     

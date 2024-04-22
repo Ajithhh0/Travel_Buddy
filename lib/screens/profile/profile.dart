@@ -165,7 +165,7 @@ void dispose() {
                       ],
                     ),
                     const SizedBox(
-                        height: 15), // Space between user details and buttons
+                        height: 15),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -188,6 +188,16 @@ void dispose() {
                             );
                           },
                           child: const Text('Buddy List'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const BuddyList()),
+                            );
+                          },
+                          child: const Text('Requests'),
                         ),
                       ],
                     ),

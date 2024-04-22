@@ -78,7 +78,7 @@ class CommonMethods {
 
   //directions_api
   static Future<DirectionDetails?> getDirectionDetailsFromAPI(
-      LatLng source, LatLng destination) async {
+      LatLng source, LatLng destination, String gMapKey) async {
     String urlDirectionsAPI =
         "https://maps.googleapis.com/maps/api/directions/json?destination=${destination.latitude},${destination.longitude}&origin=${source.latitude},${source.longitude}&mode=driving&key=$gMapKey";
 
@@ -110,5 +110,37 @@ class CommonMethods {
         responseFromDirectionsAPI["routes"][0]["overview_polyline"]["points"];
 
     return detailsModel;
+  }
+
+  static List<LatLng> decodePolyline(String encodedPolyline) {
+    List<LatLng> points = [];
+    int index = 0, len = encodedPolyline.length;
+    int lat = 0, lng = 0;
+
+    while (index < len) {
+      int b, shift = 0, result = 0;
+      do {
+        b = encodedPolyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlat = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+
+      shift = 0;
+      result = 0;
+      do {
+        b = encodedPolyline.codeUnitAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      int dlng = ((result & 1) != 0 ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+
+      double latitude = lat / 1E5;
+      double longitude = lng / 1E5;
+      points.add(LatLng(latitude, longitude));
+    }
+    return points;
   }
 }
