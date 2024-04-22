@@ -10,6 +10,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:travel_buddy/screens/profile/buddy_list.dart';
+import 'package:travel_buddy/screens/profile/buddy_requests.dart';
 import 'package:travel_buddy/screens/profile/editprofile.dart';
 import 'package:travel_buddy/screens/profile/search.dart';
 
@@ -194,7 +195,7 @@ void dispose() {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => const BuddyList()),
+                                  builder: (context) => const BuddyRequests()),
                             );
                           },
                           child: const Text('Requests'),

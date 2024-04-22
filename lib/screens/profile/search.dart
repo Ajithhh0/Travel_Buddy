@@ -141,15 +141,29 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Future<void> _addBuddy(DocumentSnapshot user) async {
-    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
-    final buddyData = user.data() as Map<String, dynamic>;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUserUid)
-        .collection("buddies")
-        .doc(user.id)
-        .set(buddyData);
-  }
+  final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+  final buddyData = user.data() as Map<String, dynamic>;
+  
+  // Create a map containing senderId and acceptance_status
+  Map<String, dynamic> requestDetails = {
+    'senderId': currentUserUid,
+    'acceptance_status': 1, // Assuming 1 means accepted, modify if necessary
+  };
+
+  // Get the reference to the buddy's document
+  DocumentReference buddyRef = FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.id);
+
+  // Update the buddy's document with buddy_requests field
+  await buddyRef.set({
+    'buddy_requests': FieldValue.arrayUnion([requestDetails])
+  }, SetOptions(merge: true));
+  
+ 
+ 
+}
+
 
   Future<void> _removeBuddy(String buddyId) async {
     final currentUserUid = FirebaseAuth.instance.currentUser!.uid;

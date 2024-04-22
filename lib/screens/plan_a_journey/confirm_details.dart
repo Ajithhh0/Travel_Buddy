@@ -156,7 +156,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
         ),
-        backgroundColor: Colors.grey,
+        backgroundColor: Colors.white,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -233,7 +233,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
           topRight: Radius.circular(20),
         ),
         child: BottomAppBar(
-          color: Colors.grey,
+          color: Colors.white,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(

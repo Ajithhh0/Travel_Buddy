@@ -34,10 +34,10 @@ class _TripPlanningState extends State<TripPlanning> {
       appBar: AppBar(
         title: const Text('Trip Planning'),
         centerTitle: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
-        backgroundColor:  Colors.grey,
+        // shape: const RoundedRectangleBorder(
+        //   borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        // ),
+        backgroundColor:  Colors.white,
         elevation: 20,
         flexibleSpace: const ClipRRect(
           borderRadius: BorderRadius.only(
