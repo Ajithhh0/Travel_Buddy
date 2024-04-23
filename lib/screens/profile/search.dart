@@ -13,7 +13,7 @@ class _SearchPageState extends State<SearchPage> {
   String? username;
   final TextEditingController _searchController = TextEditingController();
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -29,21 +29,21 @@ class _SearchPageState extends State<SearchPage> {
                     username = val;
                   });
                 },
-                decoration:InputDecoration(
+                decoration: InputDecoration(
                   fillColor: Colors.grey,
                   hintText: 'Search',
                   border: InputBorder.none,
-                  suffixIcon: _searchController.text.isNotEmpty ? 
-                  IconButton(
-                    onPressed: () {
-                       _searchController.clear();
-                      setState(() {
+                  suffixIcon: _searchController.text.isNotEmpty
+                      ? IconButton(
+                          onPressed: () {
+                            _searchController.clear();
+                            setState(() {
                               username = null;
                             });
-                    },
-                    icon: const Icon(Icons.clear),
-                  
-                  ): null,
+                          },
+                          icon: const Icon(Icons.clear),
+                        )
+                      : null,
                 ),
               ),
             ),
@@ -100,7 +100,7 @@ class _SearchPageState extends State<SearchPage> {
                         trailing: ElevatedButton(
                           onPressed: () async {
                             if (await _isBuddy(buddyId)) {
-                              await _removeBuddy(buddyId);
+                              await _removeRequest(buddyId);
                             } else {
                               await _addBuddy(user);
                             }
@@ -133,45 +133,64 @@ class _SearchPageState extends State<SearchPage> {
     final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
     final buddyDoc = await FirebaseFirestore.instance
         .collection('users')
-        .doc(currentUserUid)
-        .collection('buddies')
         .doc(buddyId)
         .get();
-    return buddyDoc.exists;
+
+    if (buddyDoc.exists) {
+      final buddyData = buddyDoc.data() as Map<String, dynamic>;
+      if (buddyData.containsKey('buddy_requests')) {
+        final buddyRequests = buddyData['buddy_requests'] as List<dynamic>;
+        return buddyRequests.any((request) =>
+            request['senderId'] == currentUserUid &&
+            request['acceptance_status'] == 1);
+      }
+    }
+
+    return false;
   }
 
   Future<void> _addBuddy(DocumentSnapshot user) async {
-  final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
-  final buddyData = user.data() as Map<String, dynamic>;
-  
-  // Create a map containing senderId and acceptance_status
-  Map<String, dynamic> requestDetails = {
-    'senderId': currentUserUid,
-    'acceptance_status': 1, // Assuming 1 means accepted, modify if necessary
-  };
-
-  // Get the reference to the buddy's document
-  DocumentReference buddyRef = FirebaseFirestore.instance
-      .collection('users')
-      .doc(user.id);
-
-  // Update the buddy's document with buddy_requests field
-  await buddyRef.set({
-    'buddy_requests': FieldValue.arrayUnion([requestDetails])
-  }, SetOptions(merge: true));
-  
- 
- 
-}
-
-
-  Future<void> _removeBuddy(String buddyId) async {
     final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUserUid)
-        .collection("buddies")
-        .doc(buddyId)
-        .delete();
+    final buddyId = user.id;
+
+    if (await _isBuddy(buddyId)) {
+      // Remove the existing request
+      await _removeRequest(buddyId);
+    } else {
+      // Create a new request
+      Map<String, dynamic> requestDetails = {
+        'senderId': currentUserUid,
+        'acceptance_status': 1, // Assuming 1 means accepted, modify if necessary
+      };
+
+      // Get the reference to the buddy's document
+      DocumentReference buddyRef =
+          FirebaseFirestore.instance.collection('users').doc(buddyId);
+
+      // Update the buddy's document with buddy_requests field
+      await buddyRef.set({
+        'buddy_requests': FieldValue.arrayUnion([requestDetails])
+      }, SetOptions(merge: true));
+    }
+  }
+
+  Future<void> _removeRequest(String buddyId) async {
+    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+    final buddyRef = FirebaseFirestore.instance.collection('users').doc(buddyId);
+
+    final buddyDoc = await buddyRef.get();
+    if (buddyDoc.exists) {
+      final buddyData = buddyDoc.data() as Map<String, dynamic>;
+      if (buddyData.containsKey('buddy_requests')) {
+        final buddyRequests = buddyData['buddy_requests'] as List<dynamic>;
+        final updatedBuddyRequests = buddyRequests
+            .where((request) => request['senderId'] != currentUserUid)
+            .toList();
+
+        await buddyRef.update({
+          'buddy_requests': updatedBuddyRequests,
+        });
+      }
+    }
   }
 }

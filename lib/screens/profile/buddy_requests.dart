@@ -112,13 +112,13 @@ class _BuddyRequestsState extends State<BuddyRequests> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          // Handle accept action
+                          _acceptBuddyRequest(senderId, currentUserUid);
                         },
                         icon: Icon(Icons.check),
                       ),
                       IconButton(
                         onPressed: () {
-                          // Handle decline action
+                           _rejectBuddyRequest(senderId, currentUserUid);
                         },
                         icon: Icon(Icons.close),
                       ),
@@ -132,4 +132,61 @@ class _BuddyRequestsState extends State<BuddyRequests> {
       ),
     );
   }
+  Future<void> _acceptBuddyRequest(String senderId, String currentUserUid) async {
+  final senderRef = FirebaseFirestore.instance.collection('users').doc(senderId);
+  final currentUserRef = FirebaseFirestore.instance.collection('users').doc(currentUserUid);
+
+  final currentUserDoc = await currentUserRef.get();
+  final currentUserData = currentUserDoc.data() as Map<String, dynamic>?;
+
+  if (currentUserData != null && currentUserData.containsKey('buddy_requests')) {
+    final buddyRequests = currentUserData['buddy_requests'] as List<dynamic>;
+
+   
+    final requestIndex = buddyRequests.indexWhere((request) {
+      return request['senderId'] == senderId && request['acceptance_status'] == 1;
+    });
+
+    if (requestIndex != -1) {
+      
+      buddyRequests[requestIndex]['acceptance_status'] = 2;
+
+      
+      await currentUserRef.update({
+        'buddy_requests': buddyRequests,
+        'buddies': FieldValue.arrayUnion([senderRef])
+      });
+
+      // Update the sender's "buddies" field
+      await senderRef.update({
+        'buddies': FieldValue.arrayUnion([currentUserRef])
+      });
+    }
+  }
+}
+
+Future<void> _rejectBuddyRequest(String senderId, String currentUserUid) async {
+  final currentUserRef = FirebaseFirestore.instance.collection('users').doc(currentUserUid);
+
+  final currentUserDoc = await currentUserRef.get();
+  final currentUserData = currentUserDoc.data() as Map<String, dynamic>?;
+
+  if (currentUserData != null && currentUserData.containsKey('buddy_requests')) {
+    final buddyRequests = currentUserData['buddy_requests'] as List<dynamic>;
+
+    final requestIndex = buddyRequests.indexWhere((request) {
+      return request['senderId'] == senderId && request['acceptance_status'] == 1;
+    });
+
+    if (requestIndex != -1) {
+      
+      buddyRequests[requestIndex]['acceptance_status'] = 0;
+
+      
+      await currentUserRef.update({
+        'buddy_requests': buddyRequests,
+      });
+    }
+  }
+}
 }

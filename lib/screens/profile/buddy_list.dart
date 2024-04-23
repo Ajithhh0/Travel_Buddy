@@ -11,15 +11,15 @@ class BuddyList extends StatefulWidget {
 }
 
 class _BuddyListState extends State<BuddyList> {
-  late Stream<QuerySnapshot> _buddiesStream;
+  late final Stream<DocumentSnapshot> _userStream;
 
   @override
   void initState() {
     super.initState();
-    _buddiesStream = FirebaseFirestore.instance
+    final currentUserUid = FirebaseAuth.instance.currentUser!.uid;
+    _userStream = FirebaseFirestore.instance
         .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('buddies')
+        .doc(currentUserUid)
         .snapshots();
   }
 
@@ -29,8 +29,8 @@ class _BuddyListState extends State<BuddyList> {
       appBar: AppBar(
         title: const Text('Buddy List'),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: _buddiesStream,
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: _userStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
@@ -44,8 +44,18 @@ class _BuddyListState extends State<BuddyList> {
             );
           }
 
-          final buddies = snapshot.data!.docs;
+          final userData = snapshot.data!.data() as Map<String, dynamic>?;
 
+          if (userData == null || !userData.containsKey('buddies')) {
+            return const Center(
+              child: Text('No buddies found'),
+            );
+          }
+
+          final buddies = (userData['buddies'] as List<dynamic>)
+    .map((buddyRef) => buddyRef as DocumentReference)
+    .toList();
+     
           return Column(
             children: [
               Padding(
@@ -56,24 +66,41 @@ class _BuddyListState extends State<BuddyList> {
                 child: ListView.builder(
                   itemCount: buddies.length,
                   itemBuilder: (context, index) {
-                    final buddy = buddies[index];
-                    final buddyData = buddy.data() as Map<String, dynamic>;
-                    return GestureDetector(
-                      onTap: () {
-                        // Navigate to buddy's profile page
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BuddyProfilePage(buddy: buddyData),
+                    final buddyRef = buddies[index];
+                    return FutureBuilder<DocumentSnapshot>(
+                      future: buddyRef.get(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const ListTile(
+                            title: Text('Loading...'),
+                          );
+                        }
+
+                        if (!snapshot.hasData || !snapshot.data!.exists) {
+                          return const ListTile(
+                            title: Text('N/A'),
+                          );
+                        }
+
+                        final buddyData = snapshot.data!.data() as Map<String, dynamic>;
+                        return GestureDetector(
+                          onTap: () {
+                            // Navigate to buddy's profile page
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BuddyProfilePage(buddy: buddyData),
+                              ),
+                            );
+                          },
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundImage: NetworkImage(buddyData['avatar_url'] ?? ''),
+                            ),
+                            title: Text(buddyData['username'] ?? ''),
                           ),
                         );
                       },
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundImage: NetworkImage(buddyData['avatar_url'] ?? ''),
-                        ),
-                        title: Text(buddyData['username'] ?? ''),
-                      ),
                     );
                   },
                 ),
