@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:travel_buddy/misc/shimmer_widget.dart';
 import 'package:travel_buddy/screens/my%20trips/Navigation.dart/nav_map.dart';
+import 'package:travel_buddy/screens/my%20trips/roles.dart';
 import 'package:travel_buddy/screens/my%20trips/vehicle_config.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
 
@@ -48,7 +49,7 @@ class _TripInfoState extends State<TripInfo> {
           .listen((DocumentSnapshot snapshot) {
         setState(() {
           tripSnapshot = snapshot;
-          creatorRef = tripSnapshot?['created_by'] as DocumentReference;
+          //creatorRef = tripSnapshot?['created_by'] as DocumentReference;
         });
       });
     } catch (e) {
@@ -131,6 +132,10 @@ class _TripInfoState extends State<TripInfo> {
               ),
             ),
             const SizedBox(height: 12.0),
+             Center(child: Text('Invite ID : ${tripSnapshot?['invite_id']}',
+             style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),)),
+                    const SizedBox(height: 8.0),
+
             SizedBox(
               width: double.infinity,
               child: Container(
@@ -148,6 +153,8 @@ class _TripInfoState extends State<TripInfo> {
                     Text('Destination: ${tripSnapshot?['destination']}'),
                     const SizedBox(height: 8.0),
                     Text('Created At: ${tripSnapshot?['created_at']}'),
+                    const SizedBox(height: 8.0),
+                    Text('Type: ${tripSnapshot?['trip_type']}'),
                   ],
                 ),
               ),
@@ -159,30 +166,32 @@ class _TripInfoState extends State<TripInfo> {
             ),
             const SizedBox(height: 10),
             FutureBuilder<DocumentSnapshot>(
-              future: creatorRef.get(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(tripSnapshot?['created_by'][0]['creatorUid'])
+                  .get(),
+              builder: (BuildContext context,
+                  AsyncSnapshot<DocumentSnapshot> creatorSnapshot) {
+                if (creatorSnapshot.connectionState == ConnectionState.waiting) {
                   return _memberShimmer();
-                }
-                if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                }
-                if (!snapshot.hasData) {
-                  return const Text('No data found');
-                }
-                final creatorData =
-                    snapshot.data!.data() as Map<String, dynamic>;
-                final creatorName = creatorData['username'];
-                final creatorAvatarUrl = creatorData['avatar_url'];
+                } else if (creatorSnapshot.hasError) {
+                  return const Text('Error fetching creator data');
+                } else {
+                  Map<String, dynamic> creatorData =
+                      creatorSnapshot.data!.data() as Map<String, dynamic>;
+                  String creatorUsername =
+                      creatorData['username'] ?? 'Unknown User';
+                  String creatorAvatarUrl = creatorData['avatar_url'] ?? '';
 
                 return ListTile(
                   leading: CircleAvatar(
                     backgroundImage: NetworkImage(creatorAvatarUrl),
                   ),
-                  title: Text(creatorName),
+                  title: Text(creatorUsername),
                   subtitle: const Text('Trip Admin'),
                 );
-              },
+              }
+            },
             ),
             Expanded(
               child: ListView.builder(
@@ -195,7 +204,7 @@ class _TripInfoState extends State<TripInfo> {
                       memberData['acceptance_status'] as int;
 
                   // Check if the current user is the admin
-                  if (currentUserUid == creatorRef.id) {
+                  if (currentUserUid == tripSnapshot?['created_by'][0]['creatorUid']) {
                     // Admin sees all members
                     return _buildMemberTile(memberUid);
                   }
@@ -239,7 +248,7 @@ class _TripInfoState extends State<TripInfo> {
                 child: const Text('Budget'),
               ),
             ),
-            const SizedBox(width: 200.0,),
+            const SizedBox(width: 90.0,),
             InkWell(
               onTap: () {
                 Navigator.push(
@@ -252,7 +261,23 @@ class _TripInfoState extends State<TripInfo> {
               child: Container(
                 height: 40,
                 alignment: Alignment.bottomRight,
-                child: const Text('Vehicle Details'),
+                child: const Text('Walkie(Test)'),
+              ),
+            ),
+            const SizedBox(width: 100.0,),
+            InkWell(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RolesScreen(tripId: widget.tripId ,)
+                  ),
+                );
+              },
+              child: Container(
+                height: 40,
+                alignment: Alignment.bottomRight,
+                child: const Text('Roles'),
               ),
             ),
           ],

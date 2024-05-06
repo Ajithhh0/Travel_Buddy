@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -32,46 +34,40 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
   late String startLocation;
   late String destinationLocation;
   late List<Member> savedMembers;
+  String? tripType;
 
   @override
-  void initState() {
-    super.initState();
-    // Retrieve start and destination locations from the provider
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     final appInfo = Provider.of<AppInfo>(context, listen: false);
-    startLocation =
-        appInfo.startLocation?.humanReadableAddress ?? 'Not Available';
-    destinationLocation =
-        appInfo.destinationLocation?.humanReadableAddress ?? 'Not Available';
+    startLocation = appInfo.startLocation?.humanReadableAddress ?? 'Not Available';
+    destinationLocation = appInfo.destinationLocation?.humanReadableAddress ?? 'Not Available';
     savedMembers = widget.savedMembers;
 
     final List<DocumentReference> memberRefs = savedMembers
-        .map((member) =>
-            FirebaseFirestore.instance.collection('users').doc(member.uid))
-        .toList();
-    Provider.of<MemberRefsProvider>(context, listen: false)
-        .updateMemberRefs(memberRefs);
+      .map((member) => FirebaseFirestore.instance.collection('users').doc(member.uid))
+      .toList();
+    Provider.of<MemberRefsProvider>(context, listen: false).updateMemberRefs(memberRefs);
+  }
+
+  String generateInviteId() {
+    Random random = Random();
+    int num = random.nextInt(900000) + 100000; 
+    return num.toString();
   }
 
   Future<void> saveToDatabase() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      final tripDetailsDocumentRef =
-          FirebaseFirestore.instance.collection('trips').doc();
-
+      final tripDetailsDocumentRef = FirebaseFirestore.instance.collection('trips').doc();
       final String tripId = tripDetailsDocumentRef.id;
-
       final List<DocumentReference> memberRefs = savedMembers
-          .map((member) =>
-              FirebaseFirestore.instance.collection('users').doc(member.uid))
-          .toList();
-
-      // Update the MemberRefsProvider with the new memberRefs
-      Provider.of<MemberRefsProvider>(context, listen: false)
-          .updateMemberRefs(memberRefs);
+        .map((member) => FirebaseFirestore.instance.collection('users').doc(member.uid))
+        .toList();
+      Provider.of<MemberRefsProvider>(context, listen: false).updateMemberRefs(memberRefs);
 
       final formattedDate = DateFormat('dd-MM-yyyy').format(DateTime.now());
 
-      // Build members list with req_status
       List<Map<String, dynamic>> membersData = savedMembers.map((member) {
         return {
           'memberUid': member.uid,
@@ -79,39 +75,40 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
         };
       }).toList();
 
+      //creator
+      List<Map<String, dynamic>> creatorData = savedMembers.map((member) {
+        return {
+          'creatorUid': currentUser.uid,
+          'acceptance_status': 2,
+        };
+      }).toList();
+
+      String inviteId = generateInviteId();
       var data = {
         'trip_name': widget.tripName,
-        'created_by': FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser.uid), // User Reference
+        'created_by': creatorData,
         'starting_from': startLocation,
         'destination': destinationLocation,
-        'members': membersData, // Update members with additional data
+        'members': membersData,
         'created_at': formattedDate,
         'status': 1,
+        'invite_id': inviteId,
+        'trip_type': tripType,
       };
 
       await tripDetailsDocumentRef.set(data);
 
-      print("Trip ID: $tripId");
-
-      // Update the user's document to include a reference to the newly created trip
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(currentUser.uid)
-          .update({
-        'trips': FieldValue.arrayUnion(
-            [FirebaseFirestore.instance.collection('trips').doc(tripId)])
+      await FirebaseFirestore.instance.collection('users').doc(currentUser.uid).update({
+        'trips': FieldValue.arrayUnion([FirebaseFirestore.instance.collection('trips').doc(tripId)])
       });
 
       for (final member in savedMembers) {
-        await sendTripRequest(
-            currentUser.uid, member.uid, formattedDate, tripId);
+        await sendTripRequest(currentUser.uid, member.uid, formattedDate, tripId);
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-       const SnackBar(
-          content:  Text('Your trip has been created.'),
+        const SnackBar(
+          content: Text('Your trip has been created.'),
         ),
       );
 
@@ -122,16 +119,8 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
     }
   }
 
-  Future<void> sendTripRequest(String senderUid, String recipientUid,
-      String formattedDate, String tripId) async {
-    // final DocumentReference tripRef =
-    //     FirebaseFirestore.instance.collection('trips').doc(tripId);
-
-    // Update recipient's user document with trip data
-    await FirebaseFirestore.instance
-        .collection('users')
-        .doc(recipientUid)
-        .update({
+  Future<void> sendTripRequest(String senderUid, String recipientUid, String formattedDate, String tripId) async {
+    await FirebaseFirestore.instance.collection('users').doc(recipientUid).update({
       'requests': FieldValue.arrayUnion([
         {
           'trip': tripId,
@@ -141,7 +130,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-     const SnackBar(
+      const SnackBar(
         content: Text('Your trip request has been sent.'),
       ),
     );
@@ -163,11 +152,39 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              'Trip Type: ',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            Row(
+              children: [
+                Radio<String>(
+                  value: 'Private',
+                  groupValue: tripType,
+                  onChanged: (value) {
+                    setState(() {
+                      tripType = value;
+                    });
+                  },
+                ),
+                const Text('Private'),
+                Radio<String>(
+                  value: 'Public',
+                  groupValue: tripType,
+                  onChanged: (value) {
+                    setState(() {
+                      tripType = value;
+                    });
+                  },
+                ),
+                const Text('Public'),
+              ],
+            ),
+            const SizedBox(height: 10),
             Center(
               child: Text(
                 'Trip Name: ${widget.tripName ?? ''}',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ),
             const SizedBox(height: 10),
@@ -218,8 +235,7 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
                     leading: CircleAvatar(
                       backgroundImage: NetworkImage(member.avatarUrl),
                     ),
-                    title: Text(member.name,
-                        style: const TextStyle(color: Colors.white)),
+                    title: Text(member.name, style: const TextStyle(color: Colors.white)),
                   );
                 },
               ),
@@ -240,12 +256,31 @@ class _ConfirmDetailsState extends State<ConfirmDetails> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 ElevatedButton(
-                  style:ElevatedButton.styleFrom(backgroundColor: Colors.black),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.black),
                   onPressed: () {
-                    saveToDatabase();
+                    setState(() {
+                      if (tripType == null) {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Alert'),
+                            content: const Text('Please select the type of trip.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        saveToDatabase();
+                      }
+                    });
                   },
-                  child: const Text('Create Trip',
-                      style: TextStyle(color: Colors.white)),
+                  child: const Text('Create Trip', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),

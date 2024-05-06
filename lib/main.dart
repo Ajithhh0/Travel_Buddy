@@ -2,6 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,14 @@ import 'package:travel_buddy/reg/log1.dart';
 
 void main() async {
  WidgetsFlutterBinding.ensureInitialized();
+
+ // Request location permission
+  LocationPermission permission = await Geolocator.requestPermission();
+
+  if (permission == LocationPermission.denied) {
+    // Handle permission denied case
+    return;
+  }
 
  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,

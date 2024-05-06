@@ -101,7 +101,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
           ),
           Expanded(
             child: Container(
-              margin: const EdgeInsets.symmetric(vertical: 10.0, ),
+              margin: const EdgeInsets.only(top: 80.0, ),
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(20.0),

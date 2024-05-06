@@ -5,7 +5,6 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:travel_buddy/misc/shimmer_widget.dart';
 import 'package:travel_buddy/screens/my%20trips/trip_info.dart';
 
-
 class Trips extends StatefulWidget {
   @override
   _TripsState createState() => _TripsState();
@@ -16,12 +15,10 @@ class _TripsState extends State<Trips> {
   bool _showDeleted = false;
   bool _showArchived = false;
 
-  Future<Map<String, dynamic>> getUserData(String userId) async {
+  Future<Map<String, dynamic>> getUserData(String uid) async {
     try {
-      DocumentSnapshot userData = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .get();
+      DocumentSnapshot userData =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
       if (userData.exists) {
         return userData.data() as Map<String, dynamic>;
       }
@@ -37,9 +34,7 @@ class _TripsState extends State<Trips> {
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-     
       appBar: AppBar(
-        
         automaticallyImplyLeading: false,
         title: Row(
           children: [
@@ -153,146 +148,180 @@ class _TripsState extends State<Trips> {
                 }
 
                 return ListView.builder(
-                    itemCount: tripSnapshot.data!.docs.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      DocumentSnapshot tripDocument =
-                          tripSnapshot.data!.docs[index];
+                  itemCount: tripSnapshot.data!.docs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    DocumentSnapshot tripDocument =
+                        tripSnapshot.data!.docs[index];
 
-                      // Fetch user data for the creator of this trip
-                      Future<Map<String, dynamic>> userDataFuture =
-                          getUserData(tripDocument['created_by'].id);
+                    // Fetch user data for the creator of this trip
+                   
 
-                      return FutureBuilder(
-                        future: userDataFuture,
-                        builder: (BuildContext context,
-                            AsyncSnapshot<Map<String, dynamic>> userSnapshot) {
-                          if (userSnapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return tripShimmer();
-                          } else if (userSnapshot.hasError) {
-                            return const Text('Error fetching user data');
-                          } else {
-                            // Extract user data
-                            Map<String, dynamic> userData = userSnapshot.data!;
-                            String username =
-                                userData['username'] ?? 'Unknown User';
-                            String avatarUrl = userData['avatar_url'] ?? '';
+                     return FutureBuilder(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(tripDocument['created_by'][0]['creatorUid'])
+                          .get(),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<DocumentSnapshot> creatorSnapshot) {
+                        if (creatorSnapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return tripShimmer();
+                        } else if (creatorSnapshot.hasError) {
+                          return const Text('Error fetching creator data');
+                        } else {
+                          Map<String, dynamic> creatorData =
+                              creatorSnapshot.data!.data() as Map<String, dynamic>;
+                          String creatorUsername =
+                              creatorData['username'] ?? 'Unknown User';
+                          String creatorAvatarUrl =
+                              creatorData['avatar_url'] ?? '';
 
-                            return GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => TripInfo(
-                                      tripId: tripDocument.id,
-                                    ),
+                          return FutureBuilder(
+                           future: getUserData(tripDocument['created_by'][0]['creatorUid']),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<Map<String, dynamic>> userSnapshot) {
+                              if (userSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return tripShimmer();
+                              } else if (userSnapshot.hasError) {
+                                return const Text('Error fetching user data');
+                              } else {
+                                Map<String, dynamic> userData =
+                                    userSnapshot.data!;
+                                String username =
+                                    userData['username'] ?? 'Unknown User';
+                                String avatarUrl = userData['avatar_url'] ?? '';
+
+                          return GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => TripInfo(
+                                    tripId: tripDocument.id,
                                   ),
-                                );
-                              },
-                              child: Slidable(
-                                startActionPane: ActionPane(
-                                  motion: const StretchMotion(),
-                                  children: [
-                                    SlidableAction(
-                                      onPressed: (context) {
-                                        if (_showDeleted) {
-                                          restoreTrip(tripDocument.id);
-                                        } else if (_showArchived) {
-                                          restoreTrip(tripDocument.id);
-                                        } else if (_showMyTrips) {
-                                          archiveTrip(tripDocument.id);
-                                        }
-                                      },
-                                      backgroundColor: Colors.blue,
-                                      icon: _showMyTrips
-                                          ? Icons.archive_outlined
-                                          : Icons.restore,
-                                    ),
-                                  ],
                                 ),
-                                endActionPane: ActionPane(
-                                  motion: const StretchMotion(),
-                                  children: [
-                                    SlidableAction(
-                                      onPressed: (context) =>
-                                          {softDeleteTrip(tripDocument.id)},
-                                      backgroundColor: Colors.red,
-                                      icon: Icons.delete_outline,
-                                    ),
-                                  ],
-                                ),
-                                child: Container(
-                                  margin: const EdgeInsets.all(8.0),
-                                  decoration: const BoxDecoration(
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(26.0),
-                                      bottomLeft: Radius.circular(26.0),
-                                      bottomRight: Radius.circular(26.0),
-                                      topRight: Radius.circular(26.0),
-                                    ),
-                                    gradient: LinearGradient(
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                      colors: [Colors.black, Colors.black],
-                                    ),
+                              );
+                            },
+                            child: Slidable(
+                              startActionPane: ActionPane(
+                                motion: const StretchMotion(),
+                                children: [
+                                  SlidableAction(
+                                    onPressed: (context) {
+                                      if (_showDeleted) {
+                                        restoreTrip(tripDocument.id);
+                                      } else if (_showArchived) {
+                                        restoreTrip(tripDocument.id);
+                                      } else if (_showMyTrips) {
+                                        archiveTrip(tripDocument.id);
+                                      }
+                                    },
+                                    backgroundColor: Colors.blue,
+                                    icon: _showMyTrips
+                                        ? Icons.archive_outlined
+                                        : Icons.restore,
                                   ),
-                                  child: ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundImage: NetworkImage(avatarUrl),
-                                      radius: 20.0,
-                                    ),
-                                    title: Padding(
-                                      padding:
-                                          const EdgeInsets.only(bottom: 8.0),
-                                      child: Center(
-                                        child: Text(
-                                          '${tripDocument['trip_name']}',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 17,
-                                            color: Colors.white,
-                                          ),
+                                ],
+                              ),
+                              endActionPane: ActionPane(
+                                motion: const StretchMotion(),
+                                children: [
+                                  SlidableAction(
+                                    onPressed: (context) =>
+                                        {softDeleteTrip(tripDocument.id)},
+                                    backgroundColor: Colors.red,
+                                    icon: Icons.delete_outline,
+                                  ),
+                                ],
+                              ),
+                              child: Container(
+                                margin: const EdgeInsets.all(8.0),
+                                decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(26.0),
+                                    bottomLeft: Radius.circular(26.0),
+                                    bottomRight: Radius.circular(26.0),
+                                    topRight: Radius.circular(26.0),
+                                  ),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [Colors.black, Colors.black],
+                                  ),
+                                ),
+                                child: ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundImage: NetworkImage(avatarUrl),
+                                    radius: 20.0,
+                                  ),
+                                  title: Padding(
+                                    padding: const EdgeInsets.only(bottom: 8.0),
+                                    child: Center(
+                                      child: Text(
+                                        '${tripDocument['trip_name']}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 17,
+                                          color: Colors.white,
                                         ),
                                       ),
                                     ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Created By: $username', style: TextStyle(color: Colors.white),),
-                                        const SizedBox(
-                                          height: 4.0,
-                                        ),
-                                        Text(
-                                            'Starting From: ${tripDocument['starting_from']}', style: TextStyle(color: Colors.white)),
-                                        const SizedBox(
-                                          height: 4.0,
-                                        ),
-                                        Text(
-                                            'Destination: ${tripDocument['destination']}', style: TextStyle(color: Colors.white)),
-                                        const SizedBox(
-                                          height: 4.0,
-                                        ),
-                                        Text(
-                                            'Created At: ${tripDocument['created_at']}', style: TextStyle(color: Colors.white)),
-                                        const SizedBox(
-                                          height: 8.0,
-                                        ),
-                                      ],
-                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Created By: $username',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                                      const SizedBox(
+                                        height: 4.0,
+                                      ),
+                                      Text(
+                                        'Starting From: ${tripDocument['starting_from']}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      const SizedBox(
+                                        height: 4.0,
+                                      ),
+                                      Text(
+                                        'Destination: ${tripDocument['destination']}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      const SizedBox(
+                                        height: 4.0,
+                                      ),
+                                      Text(
+                                        'Created At: ${tripDocument['created_at']}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                      const SizedBox(
+                                        height: 8.0,
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            );
+                            ),
+                          );
+                        }
+                      },
+                    );
+                  }
                           }
-                        },
-                      );
-                    });
+                );
               },
             );
           },
-        ),
+        );
+              }
       ),
+    ),
     );
   }
 
@@ -318,13 +347,16 @@ class _TripsState extends State<Trips> {
     setState(() {}); // Just rebuild the widget
   }
 
-  Widget tripShimmer() => ListTile(leading: ShimmerWidget.circular(height: 64, width: 64,),
-    title: Align(
-      alignment: Alignment.centerLeft,
-      child: ShimmerWidget.rectangular(
-        width: MediaQuery.of(context).size.width * 0.3 ,
-        height: 16),
-    ),
-    subtitle: ShimmerWidget.rectangular(height: 10),
-  );
+  Widget tripShimmer() => ListTile(
+        leading: ShimmerWidget.circular(
+          height: 64,
+          width: 64,
+        ),
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: ShimmerWidget.rectangular(
+              width: MediaQuery.of(context).size.width * 0.3, height: 16),
+        ),
+        subtitle: ShimmerWidget.rectangular(height: 10),
+      );
 }

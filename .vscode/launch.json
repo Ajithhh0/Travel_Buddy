@@ -19,13 +19,13 @@
         },
 
         {
-            "name" : "aith_phone" ,
+            "name" : "phone 1" ,
             "request" : "launch",
             "type" : "dart",
             "deviceId" : "emulator-5554"
         },
         {
-            "name" : "2nd_phone" ,
+            "name" : "phone 2" ,
             "request" : "launch",
             "type" : "dart",
             "deviceId" : "emulator-5556"
@@ -37,7 +37,7 @@
         {
             "name" : "All Devices", 
             "configurations" : [
-                "aith_phone","2nd_phone",]
+                "phone 1","phone 2",]
         }
     ]
 }

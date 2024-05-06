@@ -4,9 +4,11 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  audioplayers_windows
   cloud_firestore
   firebase_auth
   firebase_core
+  firebase_storage
   geolocator_windows
 )
 

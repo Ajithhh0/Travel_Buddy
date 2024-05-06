@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -38,6 +39,9 @@ class _MapScreenState extends State<MapScreen> {
   Set<Polyline> polylineSet = {};
   Set<Marker> markerSet = {};
   Set<Circle> circleSet = {};
+  bool isCustomizingRoute = false;
+  List<Marker> customMarkers = [];
+  List<LatLng> customWaypoints = [];
 
   @override
   void initState() {
@@ -284,6 +288,119 @@ class _MapScreenState extends State<MapScreen> {
       circleSet.add(destinationPointCircle);
     });
   }
+   
+   void _handleMapTap(LatLng tapLocation) {
+  if (isCustomizingRoute) {
+    setState(() {
+      // Find the index where to insert the new marker
+      int insertionIndex = 0;
+      for (int i = 0; i < customMarkers.length; i++) {
+        if (customMarkers[i].position.latitude > tapLocation.latitude) {
+          insertionIndex = i;
+          break;
+        }
+      }
+
+      // Insert the new marker at the appropriate index
+      customMarkers.insert(
+        insertionIndex,
+        Marker(
+          markerId: MarkerId('custom_$insertionIndex'),
+          position: tapLocation,
+          infoWindow: InfoWindow(title: 'Custom Waypoint $insertionIndex'),
+        ),
+      );
+      customWaypoints.insert(insertionIndex, tapLocation);
+
+      _updatePolylineWithCustomWaypoints();
+    });
+  }
+}
+
+void _updatePolylineWithCustomWaypoints() async {
+  final startLocation = Provider.of<AppInfo>(context, listen: false).startLocation;
+  final destinationLocation = Provider.of<AppInfo>(context, listen: false).destinationLocation;
+
+  if (startLocation == null || destinationLocation == null) {
+    return;
+  }
+
+  polylineCoOrdinates.clear();
+
+  LatLng origin = LatLng(startLocation.latitudePosition!, startLocation.longitudePosition!);
+  polylineCoOrdinates.add(origin);
+
+  for (int i = 0; i < customWaypoints.length; i++) {
+    LatLng destination = customWaypoints[i];
+    String directionsUrl = 'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$gMapKey';
+
+    var responseFromDirectionsAPI = await CommonMethods.sendRequestToAPI(directionsUrl);
+
+    if (responseFromDirectionsAPI != "error") {
+      DirectionDetails detailsModel = DirectionDetails();
+
+      detailsModel.distanceTextString = responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["text"];
+      detailsModel.distanceValueDigits = responseFromDirectionsAPI["routes"][0]["legs"][0]["distance"]["value"];
+
+      detailsModel.durationTextString = responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["text"];
+      detailsModel.durationValueDigits = responseFromDirectionsAPI["routes"][0]["legs"][0]["duration"]["value"];
+
+      detailsModel.encodedPoints = responseFromDirectionsAPI["routes"][0]["overview_polyline"]["points"];
+
+      PolylinePoints pointsPolyline = PolylinePoints();
+      List<PointLatLng> latLngPointsFromRoute = pointsPolyline.decodePolyline(detailsModel.encodedPoints!);
+
+      if (latLngPointsFromRoute.isNotEmpty) {
+        latLngPointsFromRoute.forEach((PointLatLng latLngPoint) {
+          polylineCoOrdinates.add(LatLng(latLngPoint.latitude, latLngPoint.longitude));
+        });
+      }
+
+      origin = destination;
+    }
+  }
+
+  LatLng destinationCoordinates = LatLng(destinationLocation.latitudePosition!, destinationLocation.longitudePosition!);
+  polylineCoOrdinates.add(destinationCoordinates);
+
+   if (polylineCoOrdinates.length >= 2) {
+    polylineSet.clear();
+    setState(() {
+      Polyline polyline = Polyline(
+        polylineId: const PolylineId("polylineID"),
+        color: Colors.blue,
+        points: polylineCoOrdinates,
+        jointType: JointType.round,
+        width: 4,
+        startCap: Cap.roundCap,
+        endCap: Cap.roundCap,
+        geodesic: true,
+      );
+
+      polylineSet.add(polyline);
+    });
+
+    // Ensure that the southwest and northeast coordinates are correct
+    double minLatitude = polylineCoOrdinates.map((p) => p.latitude).reduce(min);
+    double maxLatitude = polylineCoOrdinates.map((p) => p.latitude).reduce(max);
+    double minLongitude = polylineCoOrdinates.map((p) => p.longitude).reduce(min);
+    double maxLongitude = polylineCoOrdinates.map((p) => p.longitude).reduce(max);
+
+    LatLngBounds boundsLatLng = LatLngBounds(
+      southwest: LatLng(minLatitude, minLongitude),
+      northeast: LatLng(maxLatitude, maxLongitude),
+    );
+
+    controllerGoogleMap!.animateCamera(CameraUpdate.newLatLngBounds(boundsLatLng, 72));
+  }
+}
+
+  void _clearCustomRoute() {
+  setState(() {
+    customMarkers.clear();
+    _updatePolylineWithCustomWaypoints();
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -329,12 +446,13 @@ class _MapScreenState extends State<MapScreen> {
       body: Stack(
         children: [
           GoogleMap(
+            onTap: _handleMapTap,
             padding: const EdgeInsets.only(top: 26),
             initialCameraPosition: initialCameraPosition,
             mapType: MapType.normal,
             myLocationEnabled: true,
             polylines: polylineSet,
-            markers: markerSet,
+            markers: Set.from(markerSet)..addAll(customMarkers),
             // circles: circleSet,
             onMapCreated: (GoogleMapController mapController) {
               controllerGoogleMap = mapController;
@@ -348,6 +466,34 @@ class _MapScreenState extends State<MapScreen> {
               getCurrentLiveLocationUser();
             },
           ),
+           if(isCustomizingRoute)
+              Positioned(
+                 bottom: 600,
+                 right: 260,
+                child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  onPressed: _clearCustomRoute,
+                  child: const Icon(Icons.clear),
+                ),
+                const SizedBox(width: 16),
+                FloatingActionButton(
+                  onPressed: () {
+                    setState(() {
+                      isCustomizingRoute = false;
+                      customMarkers.clear();
+                      _updatePolylineWithCustomWaypoints();
+                    });
+                  },
+                  child: const Icon(Icons.done),
+                ),
+              ],
+            ),
+          ),
+                 
+
+
           Positioned(
             top: 36,
             left: 19,
@@ -418,6 +564,23 @@ class _MapScreenState extends State<MapScreen> {
           ),
         ],
       ),
+      floatingActionButton: Stack(
+  children: [
+    Positioned(
+      bottom: 80,
+      right: 1,
+      child: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            isCustomizingRoute = true;
+          });
+        },
+        child: Icon(Icons.edit),
+      ),
+    ),
+  ],
+),
+
     );
   }
 }

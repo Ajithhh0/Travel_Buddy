@@ -195,60 +195,64 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Widget _buildMessageBubble(
-    Map<String, dynamic> currentMessage,
-    String currentUserId,
-    int index,
-    List<QueryDocumentSnapshot<Object?>> loadedMessages,
-  ) {
-    final currentMessageTimestamp = currentMessage['timestamp'] as Timestamp;
-    final currentMessageDay = DateTime.fromMillisecondsSinceEpoch(
-            currentMessageTimestamp.millisecondsSinceEpoch)
-        .day;
+  Map<String, dynamic> currentMessage,
+  String currentUserId,
+  int index,
+  List<QueryDocumentSnapshot<Object?>> loadedMessages,
+) {
+  final currentMessageTimestamp = currentMessage['timestamp'] as Timestamp;
+  final currentMessageDay = DateTime.fromMillisecondsSinceEpoch(
+          currentMessageTimestamp.millisecondsSinceEpoch)
+      .day;
 
-    final nextMessageDay = index + 1 < loadedMessages.length
-        ? DateTime.fromMillisecondsSinceEpoch((loadedMessages[index + 1].data()
-                    as Map<String, dynamic>)['timestamp']
-                .millisecondsSinceEpoch)
-            .day
-        : null;
+  final nextMessageDay = index + 1 < loadedMessages.length
+      ? DateTime.fromMillisecondsSinceEpoch((loadedMessages[index + 1].data()
+                  as Map<String, dynamic>)['timestamp']
+              .millisecondsSinceEpoch)
+          .day
+      : null;
 
-    final isNewDay =
-        nextMessageDay == null || nextMessageDay != currentMessageDay;
+  final isNewDay =
+      nextMessageDay == null || nextMessageDay != currentMessageDay;
 
-    final currentMessageUserId = currentMessage['senderID'];
-    final nextMessage = index + 1 < loadedMessages.length
-        ? loadedMessages[index + 1].data() as Map<String, dynamic>
-        : null;
+  final currentMessageUserId = currentMessage['senderID'];
+  final nextMessage = index + 1 < loadedMessages.length
+      ? loadedMessages[index + 1].data() as Map<String, dynamic>
+      : null;
 
-    final nextMessageUserId =
-        nextMessage != null ? nextMessage['senderID'] : null;
-    final nextUserIsSame = nextMessageUserId == currentMessageUserId;
+  final nextMessageUserId =
+      nextMessage != null ? nextMessage['senderID'] : null;
+  final nextUserIsSame = nextMessageUserId == currentMessageUserId;
 
-    if (isNewDay && nextUserIsSame) {
-      return MessageBubble.first(
-        userImage: currentMessage['userImage'],
-        username: currentMessage['username'],
-        message: currentMessage['message'],
-        timestamp: currentMessage['timestamp'],
-        isMe: currentUserId == currentMessageUserId,
-      );
-    } else if (nextUserIsSame) {
-      return MessageBubble.next(
-        message: currentMessage['message'],
-        timestamp: currentMessage['timestamp'],
-        isMe: currentUserId == currentMessageUserId,
-      );
-    } else {
-      return MessageBubble.first(
-        userImage: currentMessage['userImage'],
-        username: currentMessage['username'],
-        message: currentMessage['message'],
-        timestamp: currentMessage['timestamp'],
-        isMe: currentUserId == currentMessageUserId,
-      );
-    }
+  final messageId = loadedMessages[index].id; // Get the message ID
+
+  if (isNewDay && nextUserIsSame) {
+    return MessageBubble.first(
+      userImage: currentMessage['userImage'],
+      username: currentMessage['username'],
+      message: currentMessage['message'],
+      timestamp: currentMessage['timestamp'],
+      isMe: currentUserId == currentMessageUserId,
+      messageId: messageId,
+    );
+  } else if (nextUserIsSame) {
+    return MessageBubble.next(
+      message: currentMessage['message'],
+      timestamp: currentMessage['timestamp'],
+      isMe: currentUserId == currentMessageUserId,
+      messageId: messageId,
+    );
+  } else {
+    return MessageBubble.first(
+      userImage: currentMessage['userImage'],
+      username: currentMessage['username'],
+      message: currentMessage['message'],
+      timestamp: currentMessage['timestamp'],
+      isMe: currentUserId == currentMessageUserId,
+      messageId: messageId,
+    );
   }
-
+}
   Widget _buildUserInput() {
     return Padding(
       padding: const EdgeInsets.only(bottom: 18.0, left: 15.0),
