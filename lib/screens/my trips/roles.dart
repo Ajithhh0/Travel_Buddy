@@ -42,7 +42,7 @@ class _RolesScreenState extends State<RolesScreen> {
             selectedRoles[memberUid] = null;
           }
         }
-        creatorRef = documentSnapshot['created_by'] as DocumentReference;
+        // creatorRef = documentSnapshot['created_by'][0]['creatorUid'] as DocumentReference;
       }
     });
 
@@ -60,6 +60,7 @@ class _RolesScreenState extends State<RolesScreen> {
       }
     });
 
+    _fetchRoles();
     _fetchTripData();
   }
 
@@ -72,7 +73,7 @@ class _RolesScreenState extends State<RolesScreen> {
           .listen((DocumentSnapshot snapshot) {
         setState(() {
           tripSnapshot = snapshot;
-         // creatorRef = tripSnapshot?['created_by'][0]['creatorUid'] as DocumentReference;
+          // creatorRef = tripSnapshot?['created_by'][0]['creatorUid'] as DocumentReference;
         });
       });
     } catch (e) {
@@ -179,41 +180,40 @@ class _RolesScreenState extends State<RolesScreen> {
       body: Column(
         children: [
           FutureBuilder<DocumentSnapshot>(
-              future: FirebaseFirestore.instance
-                  .collection('users')
-                  .doc(tripSnapshot?['created_by'][0]['creatorUid'])
-                  .get(),
-              builder: (BuildContext context,
-                  AsyncSnapshot<DocumentSnapshot> creatorSnapshot) {
-                if (creatorSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return _memberShimmer();
-                } else if (creatorSnapshot.hasError) {
-                  return const Text('Error fetching creator data');
-                } else {
-                  Map<String, dynamic> creatorData =
-                      creatorSnapshot.data!.data() as Map<String, dynamic>;
-                  String creatorUsername =
-                      creatorData['username'] ?? 'Unknown User';
-                  String creatorAvatarUrl = creatorData['avatar_url'] ?? '';
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(tripSnapshot?['created_by'][0]['creatorUid'])
+                .get(),
+            builder: (BuildContext context,
+                AsyncSnapshot<DocumentSnapshot> creatorSnapshot) {
+              if (creatorSnapshot.connectionState == ConnectionState.waiting) {
+                return _memberShimmer();
+              } else if (creatorSnapshot.hasError) {
+                return const Text('Error fetching creator data');
+              } else {
+                Map<String, dynamic> creatorData =
+                    creatorSnapshot.data!.data() as Map<String, dynamic>;
+                String creatorUsername =
+                    creatorData['username'] ?? 'Unknown User';
+                String creatorAvatarUrl = creatorData['avatar_url'] ?? '';
 
-                  return ListTile(
-                    leading: CircleAvatar(
-                      backgroundImage: NetworkImage(creatorAvatarUrl),
-                    ),
-                    title: Text(creatorUsername),
-                    subtitle: const Text('Trip Admin'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildRoleDropdown(tripSnapshot!['created_by'][0]['creatorUid']), // Pass creator UID
-                      ],
-                    ),
-                  );
-                }
-        
-              },
-              ),
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: NetworkImage(creatorAvatarUrl),
+                  ),
+                  title: Text(creatorUsername),
+                  subtitle: const Text('Trip Admin'),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildRoleDropdown(tripSnapshot!['created_by'][0]
+                          ['creatorUid']), // Pass creator UID
+                    ],
+                  ),
+                );
+              }
+            },
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: tripSnapshot?['members'].length,
@@ -224,7 +224,8 @@ class _RolesScreenState extends State<RolesScreen> {
                 final int acceptanceStatus =
                     memberData['acceptance_status'] as int;
 
-                if (currentUserUid == tripSnapshot!['created_by'][0]['creatorUid']||
+                if (currentUserUid ==
+                        tripSnapshot!['created_by'][0]['creatorUid'] ||
                     (currentUserUid == memberUid && acceptanceStatus == 2)) {
                   return _buildMemberTile(memberUid);
                 }
@@ -334,60 +335,60 @@ class _RolesScreenState extends State<RolesScreen> {
   }
 
   void confirmDetails() async {
-  try {
-    // Get the trip document reference
-    final tripDocRef =
-        FirebaseFirestore.instance.collection('trips').doc(widget.tripId);
+    try {
+      // Get the trip document reference
+      final tripDocRef =
+          FirebaseFirestore.instance.collection('trips').doc(widget.tripId);
 
-    // Fetch the current trip document data
-    final tripDoc = await tripDocRef.get();
-    final tripData = tripDoc.data() as Map<String, dynamic>?;
+      // Fetch the current trip document data
+      final tripDoc = await tripDocRef.get();
+      final tripData = tripDoc.data() as Map<String, dynamic>?;
 
-    // Create a list of updated member data with roles
-    final updatedMembers = <Map<String, dynamic>>[];
+      // Create a list of updated member data with roles
+      final updatedMembers = <Map<String, dynamic>>[];
 
-    // Iterate over the existing members
-    for (final memberData in tripData?['members'] as List<dynamic>? ?? []) {
-      final memberUid = memberData['memberUid'] as String;
-      final acceptanceStatus = memberData['acceptance_status'] as int;
+      // Iterate over the existing members
+      for (final memberData in tripData?['members'] as List<dynamic>? ?? []) {
+        final memberUid = memberData['memberUid'] as String;
+        final acceptanceStatus = memberData['acceptance_status'] as int;
 
-      // Add the selected role to the member data
-      updatedMembers.add({
-        'memberUid': memberUid,
-        'acceptance_status': acceptanceStatus,
-        'role': selectedRoles[memberUid],
-      });
+        // Add the selected role to the member data
+        updatedMembers.add({
+          'memberUid': memberUid,
+          'acceptance_status': acceptanceStatus,
+          'role': selectedRoles[memberUid],
+        });
+      }
+
+      // Update the members field in the trip document
+      await tripDocRef.update({'members': updatedMembers});
+
+      // Update the creator data if the current user is the creator
+      if (currentUserUid == tripData?['created_by'][0]['creatorUid']) {
+        // Update the creator data with the selected role
+        final updatedCreatorData = {
+          'creatorUid': currentUserUid,
+          'acceptance_status': 2,
+          'role': selectedRoles[currentUserUid],
+        };
+
+        // Update the creator data in the trip document
+        await tripDocRef.update({
+          'created_by': [updatedCreatorData],
+        });
+      }
+
+      // Show a success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Roles updated successfully')),
+      );
+    } catch (e) {
+      print('Error updating roles: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update roles')),
+      );
     }
-
-    // Update the members field in the trip document
-    await tripDocRef.update({'members': updatedMembers});
-
-    // Update the creator data if the current user is the creator
-    if (currentUserUid == tripData?['created_by'][0]['creatorUid']) {
-      // Update the creator data with the selected role
-      final updatedCreatorData = {
-        'creatorUid': currentUserUid,
-        'acceptance_status': 2,
-        'role': selectedRoles[currentUserUid],
-      };
-
-      // Update the creator data in the trip document
-      await tripDocRef.update({
-        'created_by': [updatedCreatorData],
-      });
-    }
-
-    // Show a success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Roles updated successfully')),
-    );
-  } catch (e) {
-    print('Error updating roles: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Failed to update roles')),
-    );
   }
-}
 
   Widget _memberShimmer() => ListTile(
         leading: ShimmerWidget.circular(height: 64, width: 64),
@@ -398,4 +399,34 @@ class _RolesScreenState extends State<RolesScreen> {
         ),
         subtitle: ShimmerWidget.rectangular(height: 10),
       );
+
+  Future<void> _fetchRoles() async {
+    try {
+      final tripSnapshot = await FirebaseFirestore.instance
+          .collection('trips')
+          .doc(widget.tripId)
+          .get();
+
+      if (tripSnapshot.exists) {
+        //member roles display
+        final List<dynamic>? members = tripSnapshot.data()?['members'];
+        if (members != null) {
+          setState(() {
+            for (var memberData in members) {
+              final memberUid = memberData['memberUid'];
+              selectedRoles[memberUid] = memberData['role'];
+            }
+          });
+        }
+        //for creator
+        final creatorData = tripSnapshot.data()?['created_by'][0];
+        if (creatorData != null) {
+          final creatorUid = creatorData['creatorUid'];
+          selectedRoles[creatorUid] = creatorData['role'];
+        }
+      }
+    } catch (e) {
+      print('Error fetching roles: $e');
+    }
+  }
 }
