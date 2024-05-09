@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ViewBudget extends StatefulWidget {
-  final String tripName;
+  final String tripId;
 
-  const ViewBudget({Key? key, required this.tripName}) : super(key: key);
+  const ViewBudget({super.key, required this.tripId});
 
   @override
   State<ViewBudget> createState() => _ViewBudgetState();
@@ -25,13 +25,11 @@ class _ViewBudgetState extends State<ViewBudget> {
   Future<void> fetchBudgetDetails() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      final userDocRef =
-          FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-      final tripDetailsDocumentRef =
-          userDocRef.collection('trips').doc(widget.tripName);
+      final budgetDocumentRef = FirebaseFirestore.instance
+          .collection('budget')
+          .doc(widget.tripId);
 
-      final budgetDocumentSnapshot =
-          await tripDetailsDocumentRef.collection('budget').doc('details').get();
+      final budgetDocumentSnapshot = await budgetDocumentRef.get();
 
       if (budgetDocumentSnapshot.exists) {
         final budgetData = budgetDocumentSnapshot.data() as Map<String, dynamic>;
@@ -43,11 +41,13 @@ class _ViewBudgetState extends State<ViewBudget> {
       }
     }
   }
+
   void addExpense(String description, double amount) {
     setState(() {
       expenses.add({'description': description, 'amount': amount});
       totalExpenses += amount;
     });
+    saveChanges();
   }
 
   void updateExpense(String description, double amount, int index) {
@@ -55,6 +55,7 @@ class _ViewBudgetState extends State<ViewBudget> {
       expenses[index] = {'description': description, 'amount': amount};
       totalExpenses = expenses.fold(0, (prev, curr) => prev + curr['amount']);
     });
+    saveChanges();
   }
 
   void removeExpense(int index) {
@@ -62,24 +63,25 @@ class _ViewBudgetState extends State<ViewBudget> {
       totalExpenses -= expenses[index]['amount'];
       expenses.removeAt(index);
     });
+    saveChanges();
   }
 
   Future<void> saveChanges() async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-      final userDocRef =
-          FirebaseFirestore.instance.collection('users').doc(currentUser.uid);
-      final tripDetailsDocumentRef =
-          userDocRef.collection('trips').doc(widget.tripName);
+      final budgetDocumentRef = FirebaseFirestore.instance
+          .collection('budget')
+          .doc(widget.tripId);
 
-      final budgetCollectionRef = tripDetailsDocumentRef.collection('budget');
-
-      await budgetCollectionRef.doc('details').set({
+      await budgetDocumentRef.set({
         'budget': budget,
-        'expenses': expenses,
+        'expenses': expenses.map((expense) => {
+          'description': expense['description'],
+          'amount': expense['amount'],
+        }).toList(),
         'total_expenses': totalExpenses,
         'remaining_budget': budget - totalExpenses,
-      });
+      }, SetOptions(merge: true));
     }
   }
 
@@ -89,10 +91,6 @@ class _ViewBudgetState extends State<ViewBudget> {
       appBar: AppBar(
         centerTitle: true,
         title: const Text('Budget'),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
-        backgroundColor: const Color.fromARGB(255, 151, 196, 232),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,7 +116,8 @@ class _ViewBudgetState extends State<ViewBudget> {
                             content: TextFormField(
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                  labelText: 'Enter Budget'),
+                                labelText: 'Enter Budget',
+                              ),
                               onChanged: (value) {
                                 setState(() {
                                   budget = double.tryParse(value) ?? 0.0;
@@ -147,7 +146,7 @@ class _ViewBudgetState extends State<ViewBudget> {
                     child: const Text('Set Budget'),
                   ),
                   const SizedBox(width: 5),
-                  Text(' ${budget.toStringAsFixed(2)}'),
+                  Text('Total Budget: ${budget.toStringAsFixed(2)}'),
                 ],
               ),
             ),
@@ -218,89 +217,48 @@ class _ViewBudgetState extends State<ViewBudget> {
             ],
           ),
           const SizedBox(height: 10),
-          DataTable(
-            columns: const [
-              DataColumn(label: Text('Description')),
-              DataColumn(label: Text('Amount')),
-            ],
-            rows: expenses.asMap().entries.map((entry) {
-              final index = entry.key;
-              final expense = entry.value;
-              return DataRow(
-                cells: [
-                  DataCell(Text(expense['description'])),
-                  DataCell(Text('${expense['amount']}')),
-                ],
-                
-                onSelectChanged: (isSelected) {
-                  if (isSelected != null && isSelected) {
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        String description = expense['description'];
-                        double amount = expense['amount'];
-
-                        return AlertDialog(
-                          title: const Text('Edit Expense'),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              TextFormField(
-                                initialValue: description,
-                                decoration: const InputDecoration(
-                                  labelText: 'Description',
-                                ),
-                                onChanged: (value) {
-                                  description = value;
-                                },
-                              ),
-                              TextFormField(
-                                initialValue: amount.toString(),
-                                keyboardType: TextInputType.number,
-                                decoration: const InputDecoration(
-                                  labelText: 'Amount',
-                                ),
-                                onChanged: (value) {
-                                  amount = double.tryParse(value) ?? 0.0;
-                                },
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Cancel'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                updateExpense(description, amount, index);
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Save'),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                removeExpense(index);
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text('Delete'),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  }
-                },
-              );
-            }).toList()
-              ..add(
-                DataRow(cells: [
-                  const DataCell(Text('Total expenses')),
-                  DataCell(Text('$totalExpenses')),
-                ]),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: SingleChildScrollView(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(vertical: 10.0),
+                  padding: const EdgeInsets.all(10.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: DataTable(
+                    showCheckboxColumn: false,
+                    columns: const [
+                      DataColumn(label: Text('Description')),
+                      DataColumn(label: Text('Amount')),
+                    ],
+                    rows: expenses.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final expense = entry.value;
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(expense['description'])),
+                          DataCell(Text('${expense['amount']}')),
+                        ],
+                        onSelectChanged: (isSelected) {
+                          if (isSelected != null && isSelected) {
+                            _showOptionsDialog(index);
+                          }
+                        },
+                      );
+                    }).toList()
+                      ..add(
+                        DataRow(cells: [
+                          const DataCell(Text('Total expenses')),
+                          DataCell(Text('$totalExpenses')),
+                        ]),
+                      ),
+                  ),
+                ),
               ),
+            ),
           ),
         ],
       ),
@@ -319,6 +277,118 @@ class _ViewBudgetState extends State<ViewBudget> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showOptionsDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Expense Options'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.edit),
+                title: const Text('Edit Expense'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _editExpenseDialog(index);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete),
+                title: const Text('Delete Expense'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _deleteExpenseDialog(index);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _editExpenseDialog(int index) {
+    String description = expenses[index]['description'];
+    double amount = expenses[index]['amount'];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Expense'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                initialValue: description,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                ),
+                onChanged: (value) {
+                  description = value;
+                },
+              ),
+              TextFormField(
+                initialValue: amount.toString(),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Amount',
+                ),
+                onChanged: (value) {
+                  amount = double.tryParse(value) ?? 0.0;
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                updateExpense(description, amount, index);
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteExpenseDialog(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Expense'),
+          content: const Text('Are you sure you want to delete this expense?'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                removeExpense(index);
+                Navigator.pop(context);
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

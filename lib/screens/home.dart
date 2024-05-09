@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:travel_buddy/screens/Packages_&_Offers/Hotels.dart';
+import 'package:travel_buddy/screens/join_trips/join_trip.dart';
 import 'package:travel_buddy/screens/plan_a_journey/map/map_page.dart';
 
 class Home extends StatefulWidget {
@@ -152,7 +153,10 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
                     child: FadeTransition(
                       opacity: _animation,
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => JoinTripPage()),
+                          );},
                         style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15.0),

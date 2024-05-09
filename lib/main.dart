@@ -2,6 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -13,14 +14,12 @@ import 'package:travel_buddy/misc/app_info.dart';
 import 'package:travel_buddy/misc/members_provider.dart';
 import 'package:travel_buddy/misc/tripdetailsprovider.dart';
 import 'package:travel_buddy/screens/home_screen.dart';
-import 'package:travel_buddy/reg/log1.dart'; 
-
-
+import 'package:travel_buddy/reg/log1.dart';
 
 void main() async {
- WidgetsFlutterBinding.ensureInitialized();
+  WidgetsFlutterBinding.ensureInitialized();
 
- // Request location permission
+  // Request location permission
   LocationPermission permission = await Geolocator.requestPermission();
 
   if (permission == LocationPermission.denied) {
@@ -28,36 +27,37 @@ void main() async {
     return;
   }
 
- await Firebase.initializeApp(
+  await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
- );
+  );
 
- FirebaseAuth.instance.authStateChanges().listen((User? user) {
+  FirebaseAuth.instance.authStateChanges().listen((User? user) {
     if (user == null) {
       print('User is signed out');
     } else {
       print('User is signed in: ${user.uid}');
     }
- });
-
- runApp(
+  });
+  //await dotenv.load(fileName: ' assets/config/.env');
+  runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (context) => TripDetailsProvider(),
         ),
         ChangeNotifierProvider(
-          create: (context) => MemberRefsProvider(), // Add the MemberRefsProvider here
+          create: (context) =>
+              MemberRefsProvider(), // Add the MemberRefsProvider here
         ),
       ],
       child: MyApp(),
     ),
- );
+  );
 }
 
 class MyApp extends StatelessWidget {
- @override
- Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => AppInfo(),
       child: GetMaterialApp(
@@ -65,10 +65,11 @@ class MyApp extends StatelessWidget {
         title: 'Travel Buddy',
         theme: ThemeData(
           appBarTheme: AppBarTheme(),
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey[400]!,
-          primary:Colors.black ,
-          secondary: Colors.white38,
-          background: Colors.white),
+          colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.grey[400]!,
+              primary: Colors.black,
+              secondary: Colors.white38,
+              background: Colors.white),
           primaryColor: Colors.grey[300]!,
           useMaterial3: true,
           textTheme: GoogleFonts.poppinsTextTheme(),
@@ -85,5 +86,5 @@ class MyApp extends StatelessWidget {
         ),
       ),
     );
- }
+  }
 }

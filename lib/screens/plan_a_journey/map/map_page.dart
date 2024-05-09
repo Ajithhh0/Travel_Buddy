@@ -446,6 +446,8 @@ void _updatePolylineWithCustomWaypoints() async {
       body: Stack(
         children: [
           GoogleMap(
+            
+            indoorViewEnabled: true,
             onTap: _handleMapTap,
             padding: const EdgeInsets.only(top: 26),
             initialCameraPosition: initialCameraPosition,

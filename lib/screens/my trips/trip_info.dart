@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:travel_buddy/misc/shimmer_widget.dart';
 import 'package:travel_buddy/screens/my%20trips/Navigation.dart/nav_map.dart';
+import 'package:travel_buddy/screens/my%20trips/itinerary.dart';
 import 'package:travel_buddy/screens/my%20trips/roles.dart';
 import 'package:travel_buddy/screens/my%20trips/vehicle_config.dart';
 import 'package:travel_buddy/screens/my%20trips/viewbudget.dart';
@@ -87,7 +88,33 @@ class _TripInfoState extends State<TripInfo> {
       },
     );
   }
+  
+  Future<void> navigateToViewBudget() async {
+  final currentUserUid = FirebaseAuth.instance.currentUser?.uid;
 
+  if (currentUserUid != null && tripSnapshot != null) {
+    // Update the trip document with the budgetDocRef
+    await FirebaseFirestore.instance
+        .collection('trips')
+        .doc(widget.tripId)
+        .set({
+      // ... other trip data
+      'budgetDocRef': FirebaseFirestore.instance
+          .collection('budget')
+          .doc(widget.tripId),
+    }, SetOptions(merge: true));
+
+    // Navigate to ViewBudget screen
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ViewBudget(
+          tripId: widget.tripId,
+        ),
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     if (tripSnapshot == null) {
@@ -132,9 +159,12 @@ class _TripInfoState extends State<TripInfo> {
               ),
             ),
             const SizedBox(height: 12.0),
-             Center(child: Text('Invite ID : ${tripSnapshot?['invite_id']}',
-             style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),)),
-                    const SizedBox(height: 8.0),
+            Center(
+                child: Text(
+              'Invite ID : ${tripSnapshot?['invite_id']}',
+              style: TextStyle(fontSize: 24.0, fontWeight: FontWeight.bold),
+            )),
+            const SizedBox(height: 8.0),
 
             SizedBox(
               width: double.infinity,
@@ -172,7 +202,8 @@ class _TripInfoState extends State<TripInfo> {
                   .get(),
               builder: (BuildContext context,
                   AsyncSnapshot<DocumentSnapshot> creatorSnapshot) {
-                if (creatorSnapshot.connectionState == ConnectionState.waiting) {
+                if (creatorSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return _memberShimmer();
                 } else if (creatorSnapshot.hasError) {
                   return const Text('Error fetching creator data');
@@ -183,15 +214,15 @@ class _TripInfoState extends State<TripInfo> {
                       creatorData['username'] ?? 'Unknown User';
                   String creatorAvatarUrl = creatorData['avatar_url'] ?? '';
 
-                return ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: NetworkImage(creatorAvatarUrl),
-                  ),
-                  title: Text(creatorUsername),
-                  subtitle: const Text('Trip Admin'),
-                );
-              }
-            },
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: NetworkImage(creatorAvatarUrl),
+                    ),
+                    title: Text(creatorUsername),
+                    subtitle: const Text('Trip Admin'),
+                  );
+                }
+              },
             ),
             Expanded(
               child: ListView.builder(
@@ -204,7 +235,8 @@ class _TripInfoState extends State<TripInfo> {
                       memberData['acceptance_status'] as int;
 
                   // Check if the current user is the admin
-                  if (currentUserUid == tripSnapshot?['created_by'][0]['creatorUid']) {
+                  if (currentUserUid ==
+                      tripSnapshot?['created_by'][0]['creatorUid']) {
                     // Admin sees all members
                     return _buildMemberTile(memberUid);
                   }
@@ -230,60 +262,53 @@ class _TripInfoState extends State<TripInfo> {
       ),
       bottomNavigationBar: BottomAppBar(
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ViewBudget(
-                      tripName: '',
-                    ),
-                  ),
-                );
+            IconButton(
+              onPressed: () {
+                navigateToViewBudget();
               },
-              child: Container(
-                height: 40,
-                alignment: Alignment.bottomLeft,
-                child: const Text('Budget'),
-              ),
+              icon: Icon(Icons.attach_money), // Budget icon
             ),
-            const SizedBox(width: 90.0,),
-            InkWell(
-              onTap: () {
+            IconButton(
+              onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => VehicleConfig()
+                    builder: (context) => VehicleConfig(),
                   ),
                 );
               },
-              child: Container(
-                height: 40,
-                alignment: Alignment.bottomRight,
-                child: const Text('Walkie(Test)'),
-              ),
+              icon: Icon(Icons.directions_car), // Vehicle configuration icon
             ),
-            const SizedBox(width: 100.0,),
-            InkWell(
-              onTap: () {
+            IconButton(
+              onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => RolesScreen(tripId: widget.tripId ,)
+                    builder: (context) => RolesScreen(tripId: widget.tripId),
                   ),
                 );
               },
-              child: Container(
-                height: 40,
-                alignment: Alignment.bottomRight,
-                child: const Text('Roles'),
-              ),
+              icon: Icon(Icons.people), // Roles icon
+            ),
+            IconButton(
+              onPressed: () {
+                // Navigate to itinerary screen
+                // Replace `ItineraryScreen` with the actual screen for itinerary
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ItineraryScreen(tripId: widget.tripId,),
+                  ),
+                );
+              },
+              icon: Icon(Icons.list), // Itinerary icon
             ),
           ],
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endDocked,
+      floatingActionButtonLocation: FloatingActionButtonLocation.miniEndFloat,
       floatingActionButton: FloatingActionButton.extended(
         backgroundColor: Colors.black,
         onPressed: () {
@@ -294,20 +319,28 @@ class _TripInfoState extends State<TripInfo> {
             ),
           );
         },
-        label: const Text('Start Trip', style: TextStyle(color: Colors.white),),
-        icon: const Icon(Icons.start_outlined, color: Colors.white,),
+        label: const Text(
+          'Start Trip',
+          style: TextStyle(color: Colors.white),
+        ),
+        icon: const Icon(
+          Icons.start_outlined,
+          color: Colors.white,
+        ),
       ),
     );
   }
 
   Widget _memberShimmer() => ListTile(
-    leading: ShimmerWidget.circular(height: 64, width: 64,),
-    title: Align(
-      alignment: Alignment.centerLeft,
-      child: ShimmerWidget.rectangular(
-        width: MediaQuery.of(context).size.width * 0.3 ,
-        height: 16),
-    ),
-    subtitle: ShimmerWidget.rectangular(height: 10),
-  );
+        leading: ShimmerWidget.circular(
+          height: 64,
+          width: 64,
+        ),
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: ShimmerWidget.rectangular(
+              width: MediaQuery.of(context).size.width * 0.3, height: 16),
+        ),
+        subtitle: ShimmerWidget.rectangular(height: 10),
+      );
 }
